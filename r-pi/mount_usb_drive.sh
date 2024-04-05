@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Check if the user has provided an argument
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <username>"
+    exit 1
+fi
+
+# Define the user under whose home directory the USB drives will be mounted
+USER="$1" # Use the first argument as the username
+
 # Backup /etc/fstab
 sudo cp /etc/fstab /etc/fstab.backup
 
@@ -8,7 +17,7 @@ for device in /dev/sd[a-z][1-9]; do
     if [ -b "$device" ]; then
         # Get the UUID and filesystem type
         eval "$(blkid -o export $device)"
-        mount_point="~/data/"
+        mount_point="/home/$USER/data/"
 
         # Check if the device is already in fstab
         if ! grep -q "UUID=$UUID" /etc/fstab; then
