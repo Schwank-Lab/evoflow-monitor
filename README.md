@@ -77,20 +77,13 @@ cp -R ~/evoflow-monitor/r-pi/docker/mosquitto ~/data/portainer
 
 
 # TODO:
-1. Write docker files for:
-
-    a. Mosquito (mqtt broker)
-   
-    b. PostgresSQL (DB storing data and info about experiments and fleet)
-   
-    c. Grafana (dashboard)
-3. Install raspberry pi 
-4. Tests:
-
-    a. mqtt comms
-   
-    b. data storing
-   
-    c. data retrieval
-   
-    d. Grafana
+- [ ] Write docker files for:
+    - [ ] Mosquito (mqtt broker)
+    - [ ] PostgresSQL (DB storing data and info about experiments and fleet)
+    - [ ] Grafana (dashboard)
+- [ ] Install raspberry pi 
+- [ ] Tests:
+    - [ ] mqtt comms
+    - [ ] data storing
+    - [ ] data retrieval
+    - [ ] Grafana
