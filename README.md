@@ -31,12 +31,19 @@ sudo apt install git
 Generate an ssh key to add to your GitHub account so that you can clone the repo
 
 ```bash
-mkdir .ssh && cd .ssh && ssh-keygen -t ed25519 -f idec_github
+mkdir ~/.ssh && cd ~/.ssh && ssh-keygen -t ed25519 -f idec_github
+```
+
+Still in ```~/.ssh``` create a file called ```config``` and paste the following content:
+```bash
+Host *.github.com
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/idec_github
 ```
 
 Add the public key to your GitHub account and clone the repo and cd into the r-pi directory
 ```bash
-git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd r-pi
+git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd  evoflow-monitor/r-pi
 ```
 
 Run the installation script 
