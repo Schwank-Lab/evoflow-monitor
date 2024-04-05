@@ -59,7 +59,7 @@ Run the installation script
 
 PostgresSql is expecting an external hard drive mounted on ```~/data```. Attach an USB HD and run the automount script:
 ```bash
-current_user=$(whoami) && ./mount_usb_hd.sh  $current_user
+./mount_usb_hd.sh  $$(whoami)
 sudo systemctl daemon-reload
 sudo mount -a
 ```
