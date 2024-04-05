@@ -18,6 +18,9 @@ the data in the DB accordingly.
 
 Furthermore, each reactor will have its own cached data (say 1 day worth of data) that will be published (on a different topic) and analyzed by the control centre for missing data and history integrity. 
 
+## Raspberry PI installation
+We use [Raspberry Pi OS Lite]{https://wiki.alpinelinux.org/wiki/Raspberry_Pi} as base OS for the Raspberry Pi and install docker system on it. Furthermore, we use [PortainerIO]{https://www.portainer.io/} to handle images and containers. 
+
 # TODO:
 1. Write docker files for:
     a. Mosquito (mqtt broker)
