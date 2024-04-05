@@ -21,6 +21,30 @@ Furthermore, each reactor will have its own cached data (say 1 day worth of data
 ## Raspberry PI installation
 We use [Raspberry Pi OS Lite]{https://wiki.alpinelinux.org/wiki/Raspberry_Pi} as base OS for the Raspberry Pi and install docker system on it. Furthermore, we use [PortainerIO]{https://www.portainer.io/} to handle images and containers. 
 
+### Installation
+To install a new Raspberry Pi you must download Raspberry Pi OS Lite and burn it into the SD card. Since the newever versions of Raspberry Pi OS, a default user is not longer provided. This means that on first boot the 
+Pi has to be connected to a display and a keyboard to set up the default user and enable ssh. Once this is done SSH into the machine and run:
+
+```bash
+sudo apt install git
+```
+
+Clone the repo and cd into the r-pi directory
+```bash
+git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd r-pi
+```
+
+Run the installation script 
+```bash
+./installme.sh
+```
+
+PostgresSql is expecting an external hard drive mounted on ```/mnt/data```. Attach an USB HD and run the automount script:
+```bash
+./mount_usb_hd.sh
+```
+
+
 # TODO:
 1. Write docker files for:
     a. Mosquito (mqtt broker)
