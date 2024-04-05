@@ -76,20 +76,14 @@ docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /va
 ```
 since it's a first installation Portainer will ask to create an admin user and password. Let's do it: connect to the UI running on port 9443 via https.
 
-Once the admin user is created we can upload the stack file (it's a Portainer version of docker-compose), however before doing that we'll have to make our Mosquitto docker file available:
-
-```bash
-cp -R ~/evoflow-monitor/r-pi/docker/mosquitto ~/data/portainer
-```
-
-
+Once the admin user is created we can upload the stack file (it's a Portainer version of docker-compose), give it a name and click deploy.
 
 # TODO:
-- [ ] Write docker files for:
-    - [ ] Mosquito (mqtt broker)
-    - [ ] PostgresSQL (DB storing data and info about experiments and fleet)
-    - [ ] Grafana (dashboard)
-- [ ] Install raspberry pi 
+- [x] Write docker files for:
+    - [x] Mosquito (mqtt broker)
+    - [x] PostgresSQL (DB storing data and info about experiments and fleet)
+    - [x] Grafana (dashboard)
+- [x] Install raspberry pi 
 - [ ] Tests:
     - [ ] mqtt comms
     - [ ] data storing
