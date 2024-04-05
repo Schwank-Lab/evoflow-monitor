@@ -28,8 +28,13 @@ Pi has to be connected to a display and a keyboard to set up the default user an
 ```bash
 sudo apt install git
 ```
+Generate an ssh key to add to your GitHub account so that you can clone the repo
 
-Clone the repo and cd into the r-pi directory
+```bash
+mkdir .ssh && cd .ssh && ssh-keygen -t ed25519 -f idec_github
+```
+
+Add the public key to your GitHub account and clone the repo and cd into the r-pi directory
 ```bash
 git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd r-pi
 ```
