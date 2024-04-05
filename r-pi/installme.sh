@@ -54,6 +54,23 @@ print_green "Docker installation complete!"
 print_green "Installing Portainer (it will run on port 8000 and 9443)..."
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest 
 
+print_green "Making sure SSH agent runs on startup..."
+# Define the snippet to add to .bashrc
+snippet="if [ -z \"\$SSH_AUTH_SOCK\" ] ; then
+  eval \`ssh-agent -s\`
+  ssh-add
+fi"
+
+# Check if the snippet is already in .bashrc
+if grep -qF -- "$snippet" ~/.bashrc; then
+  echo "SSH agent snippet is already in .bashrc"
+else
+  echo "Adding SSH agent snippet to .bashrc..."
+  # Append the snippet to .bashrc
+  echo "$snippet" >> ~/.bashrc
+  echo "Snippet added successfully."
+fi
+
 print_green "Installation complete!"
 
 # Countdown before rebooting
