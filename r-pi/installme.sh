@@ -61,15 +61,10 @@ snippet="if [ -z \"\$SSH_AUTH_SOCK\" ] ; then
   ssh-add
 fi"
 
-# Check if the snippet is already in .bashrc
-if grep -qF -- "$snippet" ~/.bashrc; then
-  echo "SSH agent snippet is already in .bashrc"
-else
-  echo "Adding SSH agent snippet to .bashrc..."
-  # Append the snippet to .bashrc
-  echo "$snippet" >> ~/.bashrc
-  echo "Snippet added successfully."
-fi
+echo "Adding SSH agent snippet to .bashrc..."
+# Append the snippet to .bashrc
+echo "$snippet" >> ~/.bashrc
+echo "Snippet added successfully."
 
 print_green "Installation complete!"
 
