@@ -11,15 +11,16 @@ services:
       - "9001:9001"
     volumes:
       - mosquitto_data:/etc/mosquitto
-      - mosquitto_conf:/mosquitto/config/mosquitto.conf
 
   postgres:
     image: postgres:latest
+    hostname: postgres
+    container_name: postgres
+    restart: always
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -27,9 +28,11 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    hostname: grafana
+    container_name: grafana
+    restart: always
     ports:
       - "3000:3000"
-    restart: always
     volumes:
       - grafana_data:/var/lib/grafana
 
@@ -46,12 +49,6 @@ volumes:
       type: none
       o: bind
       device: ~/data/mosquitto
-  mosquitto_conf:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ~/data/mosquitto/mosquitto.conf
   grafana_data:
     driver: local
     driver_opts:
