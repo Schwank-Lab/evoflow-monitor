@@ -41,6 +41,12 @@ Host *.github.com
     IdentityFile ~/.ssh/idec_github
 ```
 
+Finally, add the key to ssh-agent
+```bash
+  eval \`ssh-agent -s\`
+  ssh-add ~/.ssh/id_rsa
+```
+
 Add the public key to your GitHub account and clone the repo and cd into the r-pi directory
 ```bash
 git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd  evoflow-monitor/r-pi
