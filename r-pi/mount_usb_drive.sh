@@ -8,7 +8,7 @@ for device in /dev/sd[a-z][1-9]; do
     if [ -b "$device" ]; then
         # Get the UUID and filesystem type
         eval "$(blkid -o export $device)"
-        mount_point="/mnt/data/"
+        mount_point="~/data/"
 
         # Check if the device is already in fstab
         if ! grep -q "UUID=$UUID" /etc/fstab; then

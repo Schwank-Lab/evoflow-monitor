@@ -51,10 +51,29 @@ Run the installation script
 ./installme.sh
 ```
 
-PostgresSql is expecting an external hard drive mounted on ```/mnt/data```. Attach an USB HD and run the automount script:
+PostgresSql is expecting an external hard drive mounted on ```~/data```. Attach an USB HD and run the automount script:
 ```bash
 ./mount_usb_hd.sh
 ```
+
+We need some directories on the external HD to handle the different volumes for docker, thus on ```~/data```: 
+```bash
+mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto && mkdir -p ~/data/grafana && mkdir -p ~/data/portainer
+```
+
+### Docker Installation
+We use Portainer as UI to handle docker. Let's install it
+```bash
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:~/data/portainer portainer/portainer-ce:latest 
+```
+since it's a first installation Portainer will ask to create an admin user and password. Let's do it: connect to the UI running on port 9443 via https.
+
+Once the admin user is created we can upload the stack file (it's a Portainer version of docker-compose), however before doing that we'll have to make our Mosquitto docker file available:
+
+```bash
+cp -R ~/evoflow-monitor/r-pi/docker/mosquitto ~/data/portainer
+```
+
 
 
 # TODO:
