@@ -47,6 +47,7 @@ PostgresSql is expecting an external hard drive mounted on ```/mnt/data```. Atta
 
 # TODO:
 1. Write docker files for:
+
     a. Mosquito (mqtt broker)
    
     b. PostgresSQL (DB storing data and info about experiments and fleet)
@@ -54,6 +55,7 @@ PostgresSql is expecting an external hard drive mounted on ```/mnt/data```. Atta
     c. Grafana (dashboard)
 3. Install raspberry pi 
 4. Tests:
+
     a. mqtt comms
    
     b. data storing
