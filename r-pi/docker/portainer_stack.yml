@@ -15,7 +15,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - /mnt/data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -27,5 +27,6 @@ services:
       - grafana_data:/var/lib/grafana
 
 volumes:
-  mosquitto_data:
-  grafana_data:
+  postgres_data: ~/data/postgres
+  mosquitto_data: ~/data/mosquitto
+  grafana_data: ~/data/grafana
