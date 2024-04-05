@@ -60,6 +60,8 @@ Run the installation script
 PostgresSql is expecting an external hard drive mounted on ```~/data```. Attach an USB HD and run the automount script:
 ```bash
 current_user=$(whoami) && ./mount_usb_hd.sh  $current_user
+sudo systemctl daemon-reload
+sudo mount -a
 ```
 
 We need some directories on the external HD to handle the different volumes for docker, thus on ```~/data```: 
