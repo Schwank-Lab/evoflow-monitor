@@ -13,18 +13,24 @@ A machine will host the monitor centre with the following services:
 2. A DB (PostgresSQL)
 3. Grafana
 
-Each reactor in the fleet publishes data on a schedule (say every 5m) identifying itself an the experiment, the monitor centre subscribes to the topic receives and stores 
+Each reactor in the fleet publishes data on a schedule (say every 5m) identifying itself an the experiment. The monitor centre subscribes to the topics, receives and stores 
 the data in the DB accordingly. 
+
 Furthermore, each reactor will have its own cached data (say 1 day worth of data) that will be published (on a different topic) and analyzed by the control centre for missing data and history integrity. 
 
 # TODO:
 1. Write docker files for:
     a. Mosquito (mqtt broker)
+   
     b. PostgresSQL (DB storing data and info about experiments and fleet)
+   
     c. Grafana (dashboard)
-2. Install raspberry pi 
-3. Tests:
+3. Install raspberry pi 
+4. Tests:
     a. mqtt comms
+   
     b. data storing
+   
     c. data retrieval
+   
     d. Grafana
