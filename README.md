@@ -44,7 +44,7 @@ Host *.github.com
 Finally, add the key to ssh-agent
 ```bash
   eval \`ssh-agent -s\`
-  ssh-add ~/.ssh/id_rsa
+  ssh-add ~/.ssh/idec_github
 ```
 
 Add the public key to your GitHub account and clone the repo and cd into the r-pi directory
