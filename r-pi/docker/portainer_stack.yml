@@ -27,6 +27,21 @@ services:
       - grafana_data:/var/lib/grafana
 
 volumes:
-  postgres_data: ~/data/postgres
-  mosquitto_data: ~/data/mosquitto
-  grafana_data: ~/data/grafana
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ~/data/postgres
+  mosquitto_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ~/data/mosquitto
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ~/data/grafana
