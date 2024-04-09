@@ -1,5 +1,6 @@
 import psycopg2
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from config import Config
 
 
@@ -19,3 +20,7 @@ def idec_engine():
         "postgresql+psycopg2://",
         creator=__connect,
     )
+
+
+def session():
+    return sessionmaker(bind=idec_engine())()
