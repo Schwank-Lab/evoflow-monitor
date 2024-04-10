@@ -78,6 +78,10 @@ since it's a first installation Portainer will ask to create an admin user and p
 
 Once the admin user is created we can upload the stack file (it's a Portainer version of docker-compose), give it a name and click deploy.
 
+
+## Micro-service orchestaration
+We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to have tasks (e.g. create tables in db, insert data, ...) and flows that runs a bunch of tasks on demand. 
+
 # TODO:
 - [x] Write docker files for:
     - [x] Mosquito (mqtt broker)
