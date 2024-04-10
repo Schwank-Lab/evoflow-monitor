@@ -21,4 +21,4 @@ def add_experiment():
 
 
 if __name__ == "__main__":
-    insert_reactor_data()
+    add_reactor_to_fleet()
