@@ -9,10 +9,15 @@ def table_creation():
 
 
 @flow
-def insert_reactor_data():
+def add_reactor_to_fleet():
     write_to_database(
         Reactor, {"reactor_id": 1, "name": "Test Reactor", "network_id": "192.168.1.2"}
     )
+
+
+@flow
+def add_experiment():
+    pass
 
 
 if __name__ == "__main__":

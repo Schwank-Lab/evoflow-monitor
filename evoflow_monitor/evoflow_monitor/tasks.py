@@ -1,7 +1,6 @@
 from prefect import task
 from db.tables_definition.base import Base
-from db.utilities import idec_engine
-from db.tables_definition.schemas.idec import Reactor
+from db import idec_engine, session
 from sqlalchemy import insert
 
 
@@ -13,10 +12,11 @@ def create_tables():
 
 @task
 def write_to_database(table: Base, data: dict):
-    with idec_engine().connect() as conn:
+    with session() as session:
         insert_stmt = insert(table).values(**data)
-        conn.execute(insert_stmt)
-        conn.commit()
+        session.execute(insert_stmt)
+        session.commit()
+        session.close()
 
 
 @task
