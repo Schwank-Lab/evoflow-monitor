@@ -20,11 +20,6 @@ class MqttClient:
         print("Connected with result code " + str(rc))
         client.subscribe(self.topic)
 
-    def on_message(client, userdata, msg):
-        print(msg.topic + " " + str(msg.payload))
-        data = json.loads(msg.payload)
-        print(data)
-
     def publish(self, data):
         self.client.publish(self.topic, json.dumps(data))
 
