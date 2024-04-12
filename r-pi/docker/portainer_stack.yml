@@ -10,8 +10,10 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - mosquitto_data:/etc/mosquitto
-
+      - mosquitto_config:/mosquitto/config:rw
+      - mosquitto_data:/mosquitto/data:rw
+      - mosquitto_log:/mosquitto/log:rw
+      
   postgres:
     image: postgres:latest
     hostname: postgres
@@ -36,49 +38,8 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
-  ### Prefect Server API and UI
-  server:
-    image: prefecthq/prefect:2.11.5-python3.11
-    restart: always
-    volumes:
-      - prefect:/root/.prefect
-    entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
-    environment:
-      - PREFECT_UI_URL=http://127.0.0.1:4200/api
-      - PREFECT_API_URL=http://127.0.0.1:4200/api
-      # If you want to access Prefect Server UI from anywhere other than the Docker host machine, you will need to change
-      # PREFECT_UI_URL and PREFECT_API_URL to match the external hostname/IP of the host machine. For example:
-      #- PREFECT_UI_URL=http://external-ip:4200/api
-      #- PREFECT_API_URL=http://external-ip:4200/api
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@database:5432/prefect
-      # Uncomment the following line if you want to use the 'S3 Bucket' storage block instead of the older 'S3' storage
-      # - EXTRA_PIP_PACKAGES=prefect-aws
-    ports:
-      - 4200:4200
-    depends_on:
-      - postgres
-
-  ## Prefect Agent
-  agent:
-    image: prefecthq/prefect:2.11.5-python3.11
-    restart: always
-    entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "-q", "YOUR_WORK_QUEUE_NAME"]
-    environment:
-      - PREFECT_API_URL=http://server:4200/api
-
-  ### Prefect CLI
-  cli:
-    image: prefecthq/prefect:2.11.5-python3.11
-    entrypoint: "bash"
-    working_dir: "/root/flows"
-    volumes:
-      - "./flows:/root/flows"
-    environment:
-      - PREFECT_API_URL=http://server:4200/api
 
 volumes:
-  prefect:
   postgres_data:
     driver: local
     driver_opts:
@@ -90,7 +51,19 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ~/data/mosquitto
+      device: ~/data/mosquitto/data
+  mosquitto_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ~/data/mosquitto/config
+  mosquitto_log:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ~/data/mosquitto/log
   grafana_data:
     driver: local
     driver_opts:
