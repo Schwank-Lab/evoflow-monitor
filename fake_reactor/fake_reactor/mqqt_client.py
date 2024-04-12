@@ -1,6 +1,8 @@
+from pathlib import Path
 import paho.mqtt.client as mqtt
-import time
 import json
+import time
+from csv_reader import CSVReader
 
 
 class MqttClient:
@@ -14,25 +16,34 @@ class MqttClient:
         self.client.connect(broker, port, 60)
         self.topic = topic
 
-    def on_connect(self, client, userdata, flags, rc):
+    def on_connect(self, client, userdata, flags, rc, properties=None):
         print("Connected with result code " + str(rc))
         client.subscribe("fake_reactor")
 
-    def on_message(self, client, userdata, msg):
+    def on_message(client, userdata, msg):
         print(msg.topic + " " + str(msg.payload))
         data = json.loads(msg.payload)
         print(data)
 
     def publish(self, data):
-        self.client.publish("fake_reactor", json.dumps(data))
-
-    def loop(self):
-        self.client.loop_start()
-        while True:
-            time.sleep(1)
-            self.publish({"temperature": 25, "humidity": 50})
+        self.client.publish(self.topic, json.dumps(data))
 
 
 if __name__ == "__main__":
-    client = MqttClient("fake_reactor", "192.168.10.111", 1883, "fake_reactor")
-    client.loop()
+    file = (
+        Path(__file__).parent.parent.parent
+        / "evoflow_monitor"
+        / "data"
+        / "20240305_pace_state.csv"
+    )
+
+    client = MqttClient(
+        client_id="fake_reactor",
+        broker="192.168.10.111",
+        port=1883,
+        topic="fake_reactor",
+    )
+    reader = CSVReader(file)
+    for l in reader.to_json():
+        time.sleep(1)
+        client.publish(l)
