@@ -66,7 +66,7 @@ sudo mount -a
 
 We need some directories on the external HD to handle the different volumes for docker, thus on ```~/data```: 
 ```bash
-mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto && mkdir -p ~/data/grafana && mkdir -p ~/data/portainer
+mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/mosquitto/data && mkdir -p ~/data/mosquitto/log && mkdir -p ~/data/grafana && mkdir -p ~/data/portainer
 ```
 
 ### Docker Installation
