@@ -78,6 +78,42 @@ since it's a first installation Portainer will ask to create an admin user and p
 
 Once the admin user is created we can upload the stack file (it's a Portainer version of docker-compose), give it a name and click deploy.
 
+#### Mosquitto (mqtt broker)
+As at this installation version mqtt config file is locate on ```/var/lib/docker/volumes/monitor_stack_mosquitto/_data/mosquitto.conf``` and the password file in ```/var/lib/docker/volumes/monitor_stack_mosquitto/_data/pwfile```. This is because, despite several attemtps I didn't manage to have change the default location that portainer gives to its volumes.
+
+To create a user/password in the pwfile: 
+
+```bash
+# login interactively into the mqtt container
+docker exec -it <container-id> sh
+
+# Create new password file and add user and it will prompt for password
+mosquitto_passwd -c /mosquitto/config/pwfile user1
+
+# Add additional users (remove the -c option) and it will prompt for password
+mosquitto_passwd /mosquitto/config/pwfile user2
+
+# delete user command format
+mosquitto_passwd -D /mosquitto/config/pwfile <user-name-to-delete>
+
+# type 'exit' to exit out of docker container prompt
+
+```
+Command line help for ```mosquitto_passwd``` command above
+
+```bash
+mosquitto_passwd is a tool for managing password files for mosquitto.
+
+Usage: mosquitto_passwd [-H sha512 | -H sha512-pbkdf2] [-c | -D] passwordfile username
+       mosquitto_passwd [-H sha512 | -H sha512-pbkdf2] [-c] -b passwordfile username password
+       mosquitto_passwd -U passwordfile
+ -b : run in batch mode to allow passing passwords on the command line.
+ -c : create a new password file. This will overwrite existing files.
+ -D : delete the username rather than adding/updating its password.
+ -H : specify the hashing algorithm. Defaults to sha512-pbkdf2, which is recommended.
+      Mosquitto 1.6 and earlier defaulted to sha512.
+ -U : update a plain text password file to use hashed passwords
+```
 
 ## Micro-service orchestaration
 We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to have tasks (e.g. create tables in db, insert data, ...) and flows that runs a bunch of tasks on demand. 
@@ -89,7 +125,10 @@ We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to
     - [x] Grafana (dashboard)
 - [x] Install raspberry pi 
 - [ ] Tests:
-    - [ ] mqtt comms
+    - [x] mqtt comms
+    - [ ] remove anonymus log-in in mosquitto
     - [ ] data storing
     - [ ] data retrieval
     - [ ] Grafana
+- Fixes:
+    - [ ] volume location for mqqt
