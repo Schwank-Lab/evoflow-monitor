@@ -45,19 +45,3 @@ if __name__ == "__main__":
         # Gracefully stop the subscriber when interrupted
         subscriber.stop()
         print("Subscriber stopped.")
-
-    # try:
-    #     client = mqtt.Client(
-    #         mqtt.CallbackAPIVersion.VERSION2,
-    #         "ciccio",
-    #     )
-    #     client.on_connect = on_connect
-    #     client.on_message = on_message
-    #     client.connect("192.168.10.111", 1883, 60)
-    #     client.loop_start()
-    #     while True:
-    #         time.sleep(1)
-    # except KeyboardInterrupt:
-    #     client.loop_stop()
-    #     client.disconnect()
-    #     print("Subscriber stopped.")
