@@ -18,7 +18,3 @@ def add_reactor_to_fleet():
 @flow
 def add_experiment():
     pass
-
-
-if __name__ == "__main__":
-    add_reactor_to_fleet()
