@@ -18,7 +18,7 @@ class MqttClient:
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         print("Connected with result code " + str(rc))
-        client.subscribe("fake_reactor")
+        client.subscribe(self.topic)
 
     def on_message(client, userdata, msg):
         print(msg.topic + " " + str(msg.payload))
