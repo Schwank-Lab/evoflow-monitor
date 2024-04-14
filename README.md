@@ -70,7 +70,37 @@ mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/
 ```
 
 ### Docker Installation
-We use Portainer as UI to handle docker. Let's install it
+1. Set up Docker's ```apt`` repository.
+
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+2. Install the Docker's package
+
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+3. Verify installation 
+
+```bash
+sudo docker run hello-world
+```
+
+#### Portainer Installation
+Once Docker is installd, we use Portainer as UI to handle docker. Let's install it
 ```bash
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:~/data/portainer portainer/portainer-ce:latest 
 ```
@@ -132,3 +162,9 @@ We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to
     - [ ] Grafana
 - Fixes:
     - [ ] volume location for mqqt
+
+
+# References:
+Some useful links:
+- [rabitMQ and Prefect](https://medium.com/civicdatalab/data-orchestration-using-prefect-and-rabbitmq-6349096daca5)
+- [Mqtt and compose](https://github.com/sukesh-ak/setup-mosquitto-with-docker)
