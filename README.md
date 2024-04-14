@@ -237,6 +237,13 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 ```
 
+*** Enable access point*** by running
+```bash
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl start hostapd
+```
+
 Reboot and all should be up and running ```sudo systemctl reboot -h now```.
 
 
