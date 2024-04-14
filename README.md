@@ -70,7 +70,9 @@ mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/
 ```
 
 ### Docker Installation
-Set up Docker's ```apt``` repository.
+The installation script takes care of this but I am still documenting here for completeness:
+
+***Set up Docker's ```apt``` repository.***
 
 ```bash
 # Add Docker's official GPG key:
@@ -88,12 +90,12 @@ echo \
 sudo apt-get update
 ```
 
-Install the Docker's package
+***Install the Docker's package***
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-Add user to docker group (this will avoid using sudo to run docker commands):
+***Add user to docker group (this will avoid using sudo to run docker commands):***
 
 1. Create docker group (albeit it should be already there)
 
@@ -177,7 +179,7 @@ Once the system has reboot let's append the following to the file ```/etc/dhcpcd
 
 ```bash
 interface wlan0
-    static ip_address=10.10.10.1/24
+    static ip_address=172.16.0.1/12
     nohook wpa_supplicant
 ```
 
@@ -206,9 +208,9 @@ Modify the configuration file  ```//etc/dnsmasq.conf ```
 
 ```bash
 interface=wlan0
-dhcp-range=10.10.10.2,10.10.10.20,255.255.255.0,24h
+dhcp-range=172.16.0.2,172.16.0.100,255.255.255.0,24h
 domain=wlan
-address=/gw.wlan/10.10.10.1
+address=/gw.wlan/172.16.0.1
 ```
 
 Make sure the radio is not blocked
@@ -236,9 +238,6 @@ rsn_pairwise=CCMP
 ```
 
 Reboot and all should be up and running ```sudo systemctl reboot -h now```.
-
-
-
 
 
 ## Micro-service orchestaration
