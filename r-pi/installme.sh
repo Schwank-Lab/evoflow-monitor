@@ -4,6 +4,10 @@ print_green() {
     echo -e "\033[1;32m$1\033[0m"
 }
 
+print_red() {
+  echo -e "\033[0;31m$@\033[0m"
+}
+
 dependencies=(
     "vim"
     "tmux"
@@ -53,8 +57,6 @@ sudo usermod -aG docker $USER
 
 print_green "Docker installation complete!"
 
-print_green "Installing Portainer (it will run on port 8000 and 9443)..."
-
 
 print_green "Making sure SSH agent runs on startup..."
 # Define the snippet to add to .bashrc
@@ -77,4 +79,5 @@ for i in {10..1..-1}; do
     sleep 1
 done
 
-sudo reboot
+print_red "I am rebooting for the changes to take effect."
+sudo reboot -h now

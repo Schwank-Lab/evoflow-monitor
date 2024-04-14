@@ -53,18 +53,25 @@ git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd  evoflow-moni
 ```
 
 Run the installation script 
+
 ```bash
+sudo chmod +x installme.sh
 ./installme.sh
 ```
 
-PostgresSql is expecting an external hard drive mounted on ```~/data```. Attach an USB HD and run the automount script:
+***be aware that the installation script will reboot the machine after done!***
+
+When we come back into the machine we'll have to mount the external hard drive as PostgresSql is expecting an external hard drive mounted on ```~/data```. Attach an USB HD and run the automount script:
+
 ```bash
+sudo chmod +x mount_usb_hd.sh
 ./mount_usb_hd.sh $(whoami)
 sudo systemctl daemon-reload
 sudo mount -a
 ```
 
 We need some directories on the external HD to handle the different volumes for docker, thus on ```~/data```: 
+
 ```bash
 mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/mosquitto/data && mkdir -p ~/data/mosquitto/log && mkdir -p ~/data/grafana && mkdir -p ~/data/portainer
 ```
@@ -118,7 +125,7 @@ docker run hello-world
 #### Portainer Installation
 Once Docker is installd, we use Portainer as UI to handle docker. Let's install it
 ```bash
-docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:~/data/portainer portainer/portainer-ce:latest 
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/home/$USER/data/portainer portainer/portainer-ce:latest 
 ```
 since it's a first installation Portainer will ask to create an admin user and password. Let's do it: connect to the UI running on port 9443 via https.
 
