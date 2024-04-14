@@ -30,7 +30,9 @@ sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release -y
 
 # Add Docker’s official GPG key:
 print_green "Adding Docker's official GPG key..."
-curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 # Set up the stable repository:
 print_green "Setting up the Docker stable repository..."
