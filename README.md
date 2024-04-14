@@ -162,7 +162,7 @@ Usage: mosquitto_passwd [-H sha512 | -H sha512-pbkdf2] [-c | -D] passwordfile us
 ## Set up Wifi Access point. 
 I am following [this](https://vaibhavji.medium.com/turn-your-raspberrypi-into-a-wifi-router-5ade510601de). 
 
-Install prerequisites 
+***Install prerequisites***
 
 ```bash
 sudo apt update && sudo apt upgrade
@@ -187,6 +187,56 @@ interface wlan0
 # Enable IPv4 routing
 net.ipv4.ip_forward=1
 ```
+
+***Setting up firewall rules and save them***
+
+```bash
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+sudo netfilter-persistent save
+```
+
+***Setting up dhcp server*** by copying and modifying the default configuration file
+
+```bash
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+```
+
+Modify the configuration file  ```//etc/dnsmasq.conf ```
+
+```bash
+interface=wlan0
+dhcp-range=10.10.10.2,10.10.10.20,255.255.255.0,24h
+domain=wlan
+address=/gw.wlan/10.10.10.1
+```
+
+Make sure the radio is not blocked
+
+```bash
+sudo rfkill unblock wlan
+```
+
+***Configuring AP*** by modifying the file in ```/etc/hostapd/hostapd.conf``` as per below
+
+```bash
+country_code=CH
+interface=wlan0
+ssid=idec_reactor_fleet
+hw_mode=g
+channel=7
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=cicciociccio
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+```
+
+Reboot and all should be up and running ```sudo systemctl reboot -h now```.
+
 
 
 
