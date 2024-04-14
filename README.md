@@ -93,11 +93,27 @@ Install the Docker's package
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-Verify installation 
+Add user to docker group (this will avoid using sudo to run docker commands):
+
+1. Create docker group (albeit it should be already there)
 
 ```bash
-sudo docker run hello-world
+sudo groupadd docker
 ```
+
+2. Add user to group
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify installation (should run without sudo)
+
+```bash
+docker run hello-world
+```
+
+
 
 #### Portainer Installation
 Once Docker is installd, we use Portainer as UI to handle docker. Let's install it
