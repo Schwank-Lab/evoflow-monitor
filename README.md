@@ -113,8 +113,6 @@ Verify installation (should run without sudo)
 docker run hello-world
 ```
 
-
-
 #### Portainer Installation
 Once Docker is installd, we use Portainer as UI to handle docker. Let's install it
 ```bash
@@ -160,6 +158,38 @@ Usage: mosquitto_passwd [-H sha512 | -H sha512-pbkdf2] [-c | -D] passwordfile us
       Mosquitto 1.6 and earlier defaulted to sha512.
  -U : update a plain text password file to use hashed passwords
 ```
+
+## Set up Wifi Access point. 
+I am following [this](https://vaibhavji.medium.com/turn-your-raspberrypi-into-a-wifi-router-5ade510601de). 
+
+Install prerequisites 
+
+```bash
+sudo apt update && sudo apt upgrade
+
+sudo apt install -y hostapd dnsmasq
+
+sudo DEBIAN_FRONTEND=noninteractive apt install -y netfilter-persistent iptables-persistent
+```
+Reboot the system ```sudo reboot -h now```.
+
+Once the system has reboot let's append the following to the file ```/etc/dhcpcd.conf```
+
+```bash
+interface wlan0
+    static ip_address=10.10.10.1/24
+    nohook wpa_supplicant
+```
+
+***Enabling ip4 routing*** by appending the following to the file ```/etc/sysctl.d/routed-ap.conf```
+
+```bash
+# Enable IPv4 routing
+net.ipv4.ip_forward=1
+```
+
+
+
 
 ## Micro-service orchestaration
 We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to have tasks (e.g. create tables in db, insert data, ...) and flows that runs a bunch of tasks on demand. 
