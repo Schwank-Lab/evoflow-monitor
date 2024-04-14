@@ -70,7 +70,7 @@ mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/
 ```
 
 ### Docker Installation
-1. Set up Docker's ```apt`` repository.
+Set up Docker's ```apt``` repository.
 
 ```bash
 # Add Docker's official GPG key:
@@ -88,12 +88,12 @@ echo \
 sudo apt-get update
 ```
 
-2. Install the Docker's package
+Install the Docker's package
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-3. Verify installation 
+Verify installation 
 
 ```bash
 sudo docker run hello-world
