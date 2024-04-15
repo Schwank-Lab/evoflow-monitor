@@ -2,6 +2,9 @@ import paho.mqtt.client as mqtt
 import json
 import time
 
+from db.tables_definition.schemas.idec import ReactorState
+from evoflow_monitor.tasks import write_to_database
+
 
 class MqttListener:
     def __init__(self, client_id, broker, port, topic):
@@ -21,8 +24,8 @@ class MqttListener:
 
     def on_message(self, client, userdata, msg):
         print(msg.topic + " " + str(msg.payload))
-        data = json.loads(msg.payload)
-        print(data)
+        data = json.loads(msg.payload.decode("utf-8"))
+        write_to_database(ReactorState, data)
 
     def stop(self):
         self.client.loop_stop()
