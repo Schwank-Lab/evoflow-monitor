@@ -16,9 +16,3 @@ class CSVReader:
     def to_json(self):
         for row in self.read_lines():
             yield json.dumps(row)
-
-
-if __name__ == "__main__":
-    print(file)
-    reader = CSVReader(file)
-    print([l for l in reader.to_json()])
