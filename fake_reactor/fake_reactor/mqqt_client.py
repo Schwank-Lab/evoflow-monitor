@@ -20,7 +20,7 @@ class MqttClient:
         client.subscribe(self.topic)
 
     def publish(self, data):
-        self.client.publish(self.topic, json.dumps(data))
+        self.client.publish(self.topic, data)
 
 
 if __name__ == "__main__":
