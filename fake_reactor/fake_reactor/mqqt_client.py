@@ -12,7 +12,6 @@ class MqttClient:
             client_id,
         )
         self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
         self.client.connect(broker, port, 60)
         self.topic = topic
 
