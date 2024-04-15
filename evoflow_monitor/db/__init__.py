@@ -23,4 +23,4 @@ def idec_engine():
 
 
 def session():
-    return sessionmaker(bind=idec_engine())()
+    return sessionmaker(bind=idec_engine())
