@@ -37,7 +37,18 @@ services:
       - "3000:3000"
     volumes:
       - grafana:/var/lib/grafana
-
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: graziano.mirata@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: veryhungryphage
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
 
 volumes:
   mosquitto:
@@ -58,3 +69,5 @@ volumes:
       type: none
       o: bind
       device: /home/evohub/data/grafana
+  pgadmin-data:
+
