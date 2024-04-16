@@ -20,7 +20,7 @@ class ReactorConfig(Base):
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     reactor_config_json: Mapped[str] = mapped_column()
-    timestamp: Mapped[datetime] = mapped_column()
+    timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="reactor_configs")
@@ -30,12 +30,12 @@ class ReactorConfig(Base):
 class ReactorState(Base):
     __tablename__ = "reactor_state"
     state_id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
+    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"), nullable=True)
     inc_od: Mapped[float] = mapped_column()
     inc_temp: Mapped[float] = mapped_column()
     lagoon_temp: Mapped[float] = mapped_column()
     lagoon_flow_rate: Mapped[float] = mapped_column()
-    timestamp: Mapped[datetime] = mapped_column()
+    timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="reactor_state")
@@ -47,7 +47,7 @@ class ExpConfig(Base):
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     exp_config_json: Mapped[str] = mapped_column()
-    timestamp: Mapped[datetime] = mapped_column()
+    timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="exp_config")
@@ -59,7 +59,7 @@ class Experiment(Base):
     experiment_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     name: Mapped[str] = mapped_column()
-    timestamp: Mapped[datetime] = mapped_column()
+    timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Reactor
     reactor: Mapped["Reactor"] = relationship(back_populates="experiments")
