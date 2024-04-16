@@ -16,6 +16,8 @@ dependencies=(
     "wget"
     "make"
     "pipx"
+    "libpq-dev"
+    "gcc"
 )
 
 # Update and Upgrade
