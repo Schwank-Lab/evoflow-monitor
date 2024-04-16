@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import json
 import time
-
+from config import Config
 from db.tables_definition.schemas.idec import ReactorState
 from evoflow_monitor.tasks import write_to_database
 
@@ -35,8 +35,10 @@ class MqttListener:
 if __name__ == "__main__":
     subscriber = MqttListener(
         client_id="monitor",
-        broker="192.168.10.111",
+        broker="localhost",
         port=1883,
+        #broker=Config.MQTT_HOST,
+        #port=Config.MQTT_PORT,
         topic="fake_reactor",
     )
 
