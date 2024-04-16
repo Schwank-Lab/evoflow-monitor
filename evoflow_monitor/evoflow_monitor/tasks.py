@@ -1,5 +1,5 @@
 from prefect import task
-from db.tables_definition.base import Base
+from db.tables_definition.schemas.idec import *
 from db import idec_engine
 from sqlalchemy import insert
 from sqlalchemy.orm import sessionmaker
