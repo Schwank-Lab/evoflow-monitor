@@ -60,15 +60,16 @@ print_green "Docker installation complete!"
 
 print_green "Making sure SSH agent runs on startup..."
 # Define the snippet to add to .bashrc
-snippet="if [ -z \"\$SSH_AUTH_SOCK\" ] ; then
-  eval \`ssh-agent -s\`
-  ssh-add
-fi"
+eval \`ssh-agent -s\` >& /dev/null
+ssh-add ~/.ssh/idec_github >& /dev/null 
 
-echo "Adding SSH agent snippet to .bashrc..."
+print_green "Adding SSH agent snippet to .bashrc..."
 # Append the snippet to .bashrc
 echo "$snippet" >> ~/.bashrc
 echo "Snippet added successfully."
+
+print_green "Installing Poetry ..."
+pipx install poetry
 
 print_green "Installation complete!"
 
