@@ -10,9 +10,9 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - mosquitto_config:/mosquitto/config:rw
-      - mosquitto_data:/mosquitto/data:rw
-      - mosquitto_log:/mosquitto/log:rw
+      - mosquitto:/mosquitto/config:rw
+      - mosquitto:/mosquitto/data:rw
+      - mosquitto:/mosquitto/log:rw
       
   postgres:
     image: postgres:latest
@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -36,37 +36,25 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana:/var/lib/grafana
 
 
 volumes:
-  postgres_data:
+  mosquitto:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ~/data/postgres
-  mosquitto_data:
+      device: /home/evohub/data/mosquitto
+  postgres:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ~/data/mosquitto/data
-  mosquitto_config:
+      device: /home/evohub/data/postgres
+  grafana:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ~/data/mosquitto/config
-  mosquitto_log:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ~/data/mosquitto/log
-  grafana_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ~/data/grafana
+      device: /home/evohub/data/grafana
