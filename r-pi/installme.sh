@@ -40,9 +40,7 @@ sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 # Set up the stable repository:
 print_green "Setting up the Docker stable repository..."
-print_green \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # Update the apt package index again:
 print_green "Updating apt package index..."
