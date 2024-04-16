@@ -76,52 +76,6 @@ We need some directories on the external HD to handle the different volumes for 
 mkdir -p ~/data/postgres && mkdir -p ~/data/mosquitto/config && mkdir -p ~/data/mosquitto/data && mkdir -p ~/data/mosquitto/log && mkdir -p ~/data/grafana && mkdir -p ~/data/portainer
 ```
 
-### Docker Installation
-The installation script takes care of this but I am still documenting here for completeness:
-
-***Set up Docker's ```apt``` repository.***
-
-```bash
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-```
-
-***Install the Docker's package***
-
-```bash
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-***Add user to docker group (this will avoid using sudo to run docker commands):***
-
-1. Create docker group (albeit it should be already there)
-
-```bash
-sudo groupadd docker
-```
-
-2. Add user to group
-
-```bash
-sudo usermod -aG docker $USER
-```
-
-Verify installation (should run without sudo)
-
-```bash
-docker run hello-world
-```
-
 #### Portainer Installation
 Once Docker is installd, we use Portainer as UI to handle docker. Let's install it
 ```bash
@@ -256,6 +210,55 @@ Reboot and all should be up and running ```sudo systemctl reboot -h now```.
 
 ## Micro-service orchestaration
 We use [prefect](https://www.prefect.io/) to handle our workflow. The idea is to have tasks (e.g. create tables in db, insert data, ...) and flows that runs a bunch of tasks on demand. 
+
+
+# Extra
+## Docker Installation
+The installation script takes care of this but I am still documenting here for completeness:
+
+***Set up Docker's ```apt``` repository.***
+
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+***Install the Docker's package***
+
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+***Add user to docker group (this will avoid using sudo to run docker commands):***
+
+1. Create docker group (albeit it should be already there)
+
+```bash
+sudo groupadd docker
+```
+
+2. Add user to group
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify installation (should run without sudo)
+
+```bash
+docker run hello-world
+```
+
 
 # TODO:
 - [x] Write docker files for:
