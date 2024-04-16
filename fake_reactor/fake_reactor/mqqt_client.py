@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     client = MqttClient(
         client_id="fake_reactor",
-        broker="192.168.10.111",
+        broker="localhost",
         port=1883,
         topic="fake_reactor",
     )
