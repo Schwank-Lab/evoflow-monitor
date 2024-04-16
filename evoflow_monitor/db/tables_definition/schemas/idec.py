@@ -20,10 +20,11 @@ class ReactorConfig(Base):
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     reactor_config_json: Mapped[str] = mapped_column()
+    timestamp: Mapped[datetime] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="reactor_configs")
-    timestamp: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
 class ReactorState(Base):
@@ -34,10 +35,11 @@ class ReactorState(Base):
     inc_temp: Mapped[float] = mapped_column()
     lagoon_temp: Mapped[float] = mapped_column()
     lagoon_flow_rate: Mapped[float] = mapped_column()
+    timestamp: Mapped[datetime] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="reactor_state")
-    timestamp: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
 class ExpConfig(Base):
@@ -45,10 +47,11 @@ class ExpConfig(Base):
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     exp_config_json: Mapped[str] = mapped_column()
+    timestamp: Mapped[datetime] = mapped_column()
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(back_populates="exp_config")
-    timestamp: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
 class Experiment(Base):
@@ -56,6 +59,7 @@ class Experiment(Base):
     experiment_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     name: Mapped[str] = mapped_column()
+    timestamp: Mapped[datetime] = mapped_column()
 
     # Many-to-One relationship with Reactor
     reactor: Mapped["Reactor"] = relationship(back_populates="experiments")
@@ -67,4 +71,4 @@ class Experiment(Base):
         back_populates="experiment"
     )
     exp_configs: Mapped[List["ExpConfig"]] = relationship(back_populates="experiment")
-    timestamp: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
