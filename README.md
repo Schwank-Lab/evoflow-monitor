@@ -49,7 +49,7 @@ Finally, add the key to ssh-agent
 
 Add the public key to your GitHub account and clone the repo and cd into the r-pi directory
 ```bash
-git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd  evoflow-monitor/r-pi
+git clone git@github.com:Schwank-Lab/evoflow-monitor.git && cd  evoflow-monitor/r-pi
 ```
 
 Run the installation script 
