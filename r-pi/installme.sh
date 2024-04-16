@@ -19,18 +19,18 @@ dependencies=(
 
 # Update and Upgrade
 print_green "Updating and upgrading system packages..."
-sudo apt update && sudo apt upgrade -y
+sudo apt-get update && sudo apt-get upgrade -y
 
 # Install necessary packages to allow apt to use a repository over HTTPS and other dependencies
 print_green "Installing dependencies..."
 for package in "${dependencies[@]}"; do
     echo "Installing $package..."
-    sudo apt install "$package" -y
+    sudo apt-get install "$package" -y
 done
 
 # Install necessary packages to allow apt to use a repository over HTTPS:
 print_green "Installing dependencies for Docker installation..."
-sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release -y
+sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release -y
 
 # Add Docker’s official GPG key:
 print_green "Adding Docker's official GPG key..."
@@ -40,21 +40,20 @@ sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 # Set up the stable repository:
 print_green "Setting up the Docker stable repository..."
-"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # Update the apt package index again:
 print_green "Updating apt package index..."
-sudo apt update
+sudo apt-get update
 
 # Install the latest version of Docker Engine and containerd:
 print_green "Installing Docker Engine and containerd..."
-sudo apt install docker-ce docker-ce-cli -y
+sudo apt-get install -y docker  docker-compose
 
 sudo usermod -aG docker $USER
 # Note: After adding the user to the Docker group, you would need to log out and back in for this to take effect.
 
 print_green "Docker installation complete!"
-
 
 print_green "Making sure SSH agent runs on startup..."
 # Define the snippet to add to .bashrc
