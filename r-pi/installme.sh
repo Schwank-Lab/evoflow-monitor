@@ -15,6 +15,7 @@ dependencies=(
     "curl"
     "wget"
     "make"
+    "pipx"
 )
 
 # Update and Upgrade
