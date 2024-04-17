@@ -13,6 +13,7 @@ path = "^16.14.0"
 sqlalchemy = "^2.0.29"
 prefect = "^2.16.9"
 psycopg2 = "^2.9.9"
+prefect-github = "^0.2.2"
 
 
 [build-system]
