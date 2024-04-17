@@ -269,11 +269,11 @@ docker run hello-world
 - [ ] Tests:
     - [x] mqtt comms
     - [ ] remove anonymus log-in in mosquitto
-    - [ ] data storing
+    - [x] data storing
     - [ ] data retrieval
-    - [ ] Grafana
+    - [x] Grafana
 - Fixes:
-    - [ ] volume location for mqqt
+    - [x] volume location for mqqt
 
 
 # References:
