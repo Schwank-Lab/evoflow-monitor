@@ -5,18 +5,17 @@ import _thread
 from math import sin
 import uasyncio as asyncio
 
-ssid = "SpaceX"
-password = "NelMezzoDelC@mm1n"
-
 STATE_UNKNOWN = 0
 STATE_WIFI_NOT_CONNECTED = 1
 STATE_WIFI_CONNECTING = 2
 STATE_WIFI_CONNECTED = 3
 
 class config:
+    wifi_ssid = ""
+    widi_pwd = ""
     mqtt_host = "192.168.10.120"
-    mqtt_username = ""  
-    mqtt_password = ""  
+    mqtt_uname = ""  
+    mqtt_pwd = ""  
     mqtt_topic = "io" 
     mqtt_client_id = "pico1"
 
@@ -38,14 +37,12 @@ class Mqtt_Client:
 
 
     def _check_connection(self):
-        # check we are online
         self._wifi.check_wifi_connection()
         # check we are connected to mqtt server
         # ...
     
     
     def request_mqtt_connection(self):
-#         self._check_connection()
         if self._wifi._state == STATE_WIFI_CONNECTED:
             self._set_up_client()
             print("Mqtt Client: Connecting to broker ...")
@@ -58,21 +55,18 @@ class Mqtt_Client:
     def publish(self, msg):
         if self._wifi._state == STATE_WIFI_CONNECTED:
             self._mqtt_client.publish(self._config.mqtt_topic, msg)
-#         elif self._wifi._state == STATE_WIFI_NOT_CONNECTED:
-#             self._wifi.cycle()
-#             self.publish(msg)
 
 
 class WiFi_Client:
-    def __init__(self):
+    def __init__(self, config):
         self._state = STATE_WIFI_NOT_CONNECTED
-
+        self._config = config
 
     def request_wifi_connection(self):
         print("WiFi Client: Connecting ...")
         self._wlan = network.WLAN(network.STA_IF)
         self._wlan.active(True)
-        self._wlan.connect(ssid, password)
+        self._wlan.connect(self._config.wifi_ssid, self._config.wifi_pwd)
         while self._wlan.isconnected() == False:
             self._state = STATE_WIFI_CONNECTING
             print("WiFi Client: Waiting for connection")
