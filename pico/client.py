@@ -10,21 +10,22 @@ STATE_WIFI_NOT_CONNECTED = 1
 STATE_WIFI_CONNECTING = 2
 STATE_WIFI_CONNECTED = 3
 
+
 class config:
-    wifi_ssid = ""
-    widi_pwd = ""
-    mqtt_host = "192.168.10.120"
-    mqtt_uname = ""  
-    mqtt_pwd = ""  
-    mqtt_topic = "io" 
+    wifi_ssid = "VITAMINABI-Mirata"
+    widi_pwd = "25SET?@23"
+    mqtt_host = "192.168.1.61"
+    mqtt_uname = ""
+    mqtt_pwd = ""
+    mqtt_topic = "io"
     mqtt_client_id = "pico1"
 
 
 class Mqtt_Client:
-    def __init__(self, wifi_client: Wifi_Client, config):
+    def __init__(self, wifi_client, config):
         self._wifi = wifi_client
         self._config = config
-    
+
     def _set_up_client(self):
         print("Mqtt Client: Setting up client ...")
         self._mqtt_client = MQTTClient(
@@ -35,13 +36,11 @@ class Mqtt_Client:
         )
         print("Mqtt Client: Setting up client ... Done!")
 
-
     def _check_connection(self):
         self._wifi.check_wifi_connection()
         # check we are connected to mqtt server
         # ...
-    
-    
+
     def request_mqtt_connection(self):
         if self._wifi._state == STATE_WIFI_CONNECTED:
             self._set_up_client()
@@ -51,7 +50,6 @@ class Mqtt_Client:
         else:
             print("Mqtt Client: WiFi not ready ...")
 
-        
     def publish(self, msg):
         if self._wifi._state == STATE_WIFI_CONNECTED:
             self._mqtt_client.publish(self._config.mqtt_topic, msg)
@@ -71,9 +69,8 @@ class WiFi_Client:
             self._state = STATE_WIFI_CONNECTING
             print("WiFi Client: Waiting for connection")
             sleep(1)
-        
+
         self.check_wifi_connection()
-        
 
     def check_wifi_connection(self):
         if self._wlan.isconnected() == True:
@@ -91,7 +88,8 @@ def reactor_stuff():
         print(str(sine))
         m.publish(str(sine))
         sleep(2)
-        
+
+
 global counter, m
 counter = 0
 w = WiFi_Client()
@@ -102,7 +100,3 @@ sleep(1)
 m.request_mqtt_connection()
 sleep(1)
 _thread.start_new_thread(reactor_stuff, ())
-
-    
-
-    
