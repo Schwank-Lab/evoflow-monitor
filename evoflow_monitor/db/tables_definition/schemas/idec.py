@@ -30,7 +30,9 @@ class ReactorConfig(Base):
 class ReactorState(Base):
     __tablename__ = "reactor_state"
     state_id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"), nullable=True)
+    experiment_id: Mapped[int] = mapped_column(
+        ForeignKey("experiment.experiment_id"), nullable=True
+    )
     inc_od: Mapped[float] = mapped_column()
     inc_temp: Mapped[float] = mapped_column()
     lagoon_temp: Mapped[float] = mapped_column()
@@ -47,6 +49,7 @@ class ExpConfig(Base):
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     exp_config_json: Mapped[str] = mapped_column()
+    status: Mapped[str] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
