@@ -3,8 +3,6 @@ import dash
 from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 import base64
-import datetime
-import io
 import json
 
 # Create a Dash application
