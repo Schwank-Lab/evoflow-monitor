@@ -172,11 +172,104 @@ app.layout = dbc.Container(
                                         ],
                                         className="mb-3",
                                     ),
-                                    dbc.Button(
-                                        "Update Experiment",
-                                        id="update-experiment",
-                                        color="primary",
-                                        className="mt-3",
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Button(
+                                                    "Update Experiment",
+                                                    id="update-experiment",
+                                                    color="primary",
+                                                    className="mt-3",
+                                                ),
+                                            ),
+                                            dbc.Col(
+                                                [
+                                                    dbc.Button(
+                                                        "New Experiment",
+                                                        id="open-new-exp-modal",
+                                                        color="primary",
+                                                        className="mt-3",
+                                                    ),
+                                                    dbc.Modal(
+                                                        [
+                                                            dbc.ModalHeader(
+                                                                dbc.ModalTitle(
+                                                                    "Create New Experiment"
+                                                                )
+                                                            ),
+                                                            dbc.ModalBody(
+                                                                dbc.Form(
+                                                                    [
+                                                                        dbc.Row(
+                                                                            [
+                                                                                dbc.Label(
+                                                                                    "Experiment Name",
+                                                                                    className="col-form-label col-sm-4",
+                                                                                ),
+                                                                                dbc.Col(
+                                                                                    dbc.Input(
+                                                                                        type="text",
+                                                                                        id="new-exp-name",
+                                                                                        placeholder="Enter experiment name",
+                                                                                    ),
+                                                                                    width=8,
+                                                                                ),
+                                                                            ],
+                                                                            className="mb-3",
+                                                                        ),
+                                                                        dbc.Row(
+                                                                            [
+                                                                                dbc.Label(
+                                                                                    "Experiment Configuration",
+                                                                                    className="col-form-label col-sm-4",
+                                                                                ),
+                                                                                dbc.Col(
+                                                                                    dcc.Upload(
+                                                                                        id="upload-new-exp-config",
+                                                                                        children=html.Div(
+                                                                                            [
+                                                                                                "Drag and Drop or ",
+                                                                                                html.A(
+                                                                                                    "Select a File"
+                                                                                                ),
+                                                                                            ]
+                                                                                        ),
+                                                                                        style={
+                                                                                            "width": "100%",
+                                                                                            "height": "60px",
+                                                                                            "lineHeight": "60px",
+                                                                                            "borderWidth": "1px",
+                                                                                            "borderStyle": "dashed",
+                                                                                            "borderRadius": "5px",
+                                                                                            "textAlign": "center",
+                                                                                            "margin": "10px",
+                                                                                        },
+                                                                                        multiple=False,
+                                                                                        accept=".json",
+                                                                                    ),
+                                                                                    width=8,
+                                                                                ),
+                                                                            ],
+                                                                            className="mb-3",
+                                                                        ),
+                                                                    ],
+                                                                ),
+                                                            ),
+                                                            dbc.ModalFooter(
+                                                                dbc.Button(
+                                                                    "Save Experiment",
+                                                                    id="save-new-exp",
+                                                                    color="primary",
+                                                                    n_clicks=0,
+                                                                )
+                                                            ),
+                                                        ],
+                                                        id="modal-new-exp",
+                                                        is_open=False,
+                                                    ),
+                                                ]
+                                            ),
+                                        ]
                                     ),
                                 ]
                             ),
@@ -280,6 +373,17 @@ app.layout = dbc.Container(
     fluid=True,
     className="py-4",
 )
+
+
+@app.callback(
+    Output("modal-new-exp", "is_open"),
+    [Input("open-new-exp-modal", "n_clicks"), Input("save-new-exp", "n_clicks")],
+    [State("modal-new-exp", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 
 # Callback to handle the upload and update of the experiment configuration file
