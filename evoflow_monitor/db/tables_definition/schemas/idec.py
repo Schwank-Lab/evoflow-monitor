@@ -1,4 +1,5 @@
 from datetime import datetime
+from re import M
 from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
@@ -49,7 +50,6 @@ class ExpConfig(Base):
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
     exp_config_json: Mapped[str] = mapped_column()
-    status: Mapped[str] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
@@ -62,6 +62,8 @@ class Experiment(Base):
     experiment_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     name: Mapped[str] = mapped_column()
+    status: Mapped[str] = mapped_column()
+    end_date: Mapped[datetime] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Reactor
