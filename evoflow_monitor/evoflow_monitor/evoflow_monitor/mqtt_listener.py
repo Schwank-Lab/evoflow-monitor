@@ -65,7 +65,6 @@ class MqttListener:
         client.subscribe([(t, 1) for t in self.topics])
 
     def on_message(self, client, userdata, msg):
-        print(msg.topic + " " + str(msg.payload))
         data = json.loads(msg.payload.decode("utf-8"))
         self.topics_handlers[msg.topic](data)
 
