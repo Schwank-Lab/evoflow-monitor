@@ -46,8 +46,8 @@ class MqttListener:
         client_id: str,
         broker: str,
         port: int,
-        topic: str,
-        topic_handlers: EvohubTopics,
+        topics: list[str],
+        topics_handlers: EvohubTopics,
     ):
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
@@ -57,17 +57,17 @@ class MqttListener:
         self.client.on_message = self.on_message
         self.client.connect(broker, port, 60)
         self.client.loop_start()
-        self.topic = topic
-        self.topic_handlers = topic_handlers
+        self.topics = topics
+        self.topics_handlers = topics_handlers
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         print("Connected with result code " + str(rc))
-        client.subscribe(self.topic)
+        client.subscribe([(t, 1) for t in self.topics])
 
     def on_message(self, client, userdata, msg):
         print(msg.topic + " " + str(msg.payload))
         data = json.loads(msg.payload.decode("utf-8"))
-        self.topic_handlers[msg.topic](data)
+        self.topics_handlers[msg.topic](data)
 
     def stop(self):
         self.client.loop_stop()
@@ -79,8 +79,8 @@ if __name__ == "__main__":
         client_id="monitor",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
-        topic="experiment_monitor",
-        topic_handlers=mqtt_handlers,
+        topics=list(mqtt_handlers.keys()),
+        topics_handlers=mqtt_handlers,
     )
 
     try:
