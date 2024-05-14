@@ -30,8 +30,11 @@ class ReactorConfig(Base):
 class ReactorState(Base):
     __tablename__ = "reactor_state"
     state_id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"), nullable=True)
+    experiment_id: Mapped[int] = mapped_column(
+        ForeignKey("experiment.experiment_id"), nullable=True
+    )
     inc_od: Mapped[float] = mapped_column()
+    inc_tot_dil: Mapped[float] = mapped_column()
     inc_temp: Mapped[float] = mapped_column()
     lagoon_temp: Mapped[float] = mapped_column()
     lagoon_flow_rate: Mapped[float] = mapped_column()
