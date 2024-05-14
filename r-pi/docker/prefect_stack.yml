@@ -5,35 +5,33 @@ services:
     image: prefecthq/prefect:2-latest
     hostname: prefect_server
     restart: always
-      #command: prefect server start
-    entrypoint: ["prefect", "server", "start"]
+    command: prefect server start
     ports:
       - 4200:4200
     volumes:
-      - prefect:/root/.prefect
-      - prefect:/flows
+      - prefect_data:/root/.prefect
+      - prefect_flows:/flows
     environment:
       - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/prefect
 
-  agent:
+  prefect_agent:
     image: prefecthq/prefect:2-latest
-    restart: always
-    #entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "worker", "start", "-pool", "'evohub'"]
-    entrypoint: ["prefect", "worker", "start", "--pool", "'evohub'"]
+    privileged: true # forced for Docker DinD
+    # entrypoint: ["/bin/sh", "-c"]
+    command: prefect worker start
     environment:
-      - PREFECT_API_URL=http://prefect_server:4200/api
-
+      PREFECT_API_URL: "http://0.0.0.0:4200/api"
+    # volumes:
+    #   - type: bind
+    #     source: /var/run/docker.sock
+    #     target: /var/run/docker.sock
+    #     read_only: true
+        
 volumes:
-  prefect:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/evohub/data/prefect
+  prefect_data:
+  prefect_flows:
   
 networks:
   default:
-    name: monitor_default
+    name: monitor_stack_default
     external: true
-

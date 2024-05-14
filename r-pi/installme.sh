@@ -18,7 +18,6 @@ dependencies=(
     "pipx"
     "libpq-dev"
     "gcc"
-    "dhcpcd5"
 )
 
 # Update and Upgrade
