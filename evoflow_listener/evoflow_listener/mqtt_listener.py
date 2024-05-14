@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 from config import Config
-from utilities.mqtt_callbacks import (
+from mqtt_callbacks import (
     write_experiment_status_to_db,
     write_reactor_status_to_db,
     parse_logs_experiment,
