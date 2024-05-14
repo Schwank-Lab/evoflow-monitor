@@ -3,28 +3,14 @@ import paho.mqtt.client as mqtt
 import json
 import time
 from config import Config
-from db.tables_definition.schemas.idec import ReactorState
-from evoflow_monitor.tasks import write_to_database
-
-
-def write_experiment_data_to_db(x):
-    print("Write experiment data to db")
-    print(x)
-
-
-def write_reactor_status_to_db(x):
-    print("Write reactor status to db")
-    print(x)
-
-
-def parse_logs(x):
-    print("Parsing logs")
-    print(x)
-
-
-def parse_commands(x):
-    print("Parsing commands")
-    print(x)
+from utilities.mqtt_callbacks import (
+    write_experiment_status_to_db,
+    write_reactor_status_to_db,
+    parse_logs_experiment,
+    parse_logs_reactor,
+    parse_reactor_commands,
+    parse_experiment_commands,
+)
 
 
 class EvohubTopics(TypedDict):
@@ -33,10 +19,12 @@ class EvohubTopics(TypedDict):
 
 
 mqtt_handlers: EvohubTopics = {
-    "experiment_monitor": lambda x: write_experiment_data_to_db(x),
-    "reactor_monitor": lambda x: write_reactor_status_to_db(x),
-    "logs": lambda x: parse_commands(x),
-    "commands": lambda x: parse_commands(x),
+    "status/experiment": lambda x: write_experiment_status_to_db(x),
+    "status/reactor": lambda x: write_reactor_status_to_db(x),
+    "logs/experiment": lambda x: parse_logs_experiment(x),
+    "logs/reactor": lambda x: parse_logs_reactor(x),
+    "commands/experiment": lambda x: parse_experiment_commands(x),
+    "commands/reactor": lambda x: parse_reactor_commands(x),
 }
 
 
