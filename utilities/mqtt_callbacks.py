@@ -1,7 +1,7 @@
 from db.tables_definition.schemas.idec import (
     Reactor,
     ReactorConfig,
-    ReactorState,
+    ExperimentState,
     ExpConfig,
     Experiment,
 )
@@ -12,7 +12,8 @@ from sqlalchemy.orm import sessionmaker
 
 
 def write_to_database(
-    table: Reactor | ReactorConfig | ReactorState | ExpConfig | Experiment, data: dict
+    table: Reactor | ReactorConfig | ExperimentState | ExpConfig | Experiment,
+    data: dict,
 ):
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
@@ -24,7 +25,8 @@ def write_to_database(
 
 def write_experiment_status_to_db(data: dict):
     print("Write experiment data to db")
-    write_to_database(ReactorState, data)
+    del data["reactor_id"]
+    write_to_database(ExperimentState, data)
 
 
 def write_reactor_status_to_db(data: dict):
