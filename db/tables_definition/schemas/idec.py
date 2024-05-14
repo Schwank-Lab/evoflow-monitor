@@ -27,8 +27,8 @@ class ReactorConfig(Base):
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
-class ReactorState(Base):
-    __tablename__ = "reactor_state"
+class ExperimentState(Base):
+    __tablename__ = "experiment_state"
     state_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiment.experiment_id"), nullable=True
