@@ -62,6 +62,7 @@ class Experiment(Base):
     experiment_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     name: Mapped[str] = mapped_column()
+    status: Mapped[str] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Reactor
