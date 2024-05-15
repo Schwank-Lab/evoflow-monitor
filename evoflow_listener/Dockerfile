@@ -17,4 +17,4 @@ RUN poetry install --no-interaction --no-ansi
 COPY . .
 
 # Run the Python script
-CMD ["poetry", "run", "python", "evoflow_listener/mqtt_listener.py"]
+CMD ["poetry", "run", "python", "-u", "evoflow_listener/mqtt_listener.py"]

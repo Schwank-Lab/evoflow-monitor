@@ -26,16 +26,16 @@ class MqttClient:
 if __name__ == "__main__":
     file = (
         Path(__file__).parent.parent.parent
-        / "evoflow_monitor"
+        # / "evoflow_monitor"
         / "data"
         / "20240305_pace_state.csv"
     )
 
     client = MqttClient(
         client_id="fake_reactor",
-        broker="localhost",
+        broker="10.66.4.7",
         port=1883,
-        topic="fake_reactor",
+        topic="status/experiment",
     )
     reader = CSVReader(file)
     for l in reader.to_json():
