@@ -26,6 +26,7 @@ def write_to_database(
 def write_experiment_status_to_db(data: dict):
     print("Write experiment data to db")
     del data["reactor_id"]
+    print(data)
     write_to_database(ExperimentState, data)
 
 
