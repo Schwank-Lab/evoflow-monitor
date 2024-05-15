@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
-from db.tables_definition.base import Base
+from evoflow_listener.db.tables_definition.base import Base
 
 
 class Reactor(Base):

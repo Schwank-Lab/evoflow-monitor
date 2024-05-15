@@ -2,8 +2,8 @@ from typing import Callable, TypedDict
 import paho.mqtt.client as mqtt
 import json
 import time
-from config import Config
-from mqtt_callbacks import (
+from evoflow_listener.config import Config
+from evoflow_listener.mqtt_callbacks import (
     write_experiment_status_to_db,
     write_reactor_status_to_db,
     parse_logs_experiment,
@@ -61,7 +61,7 @@ class MqttListener:
         self.client.disconnect()
 
 
-if __name__ == "__main__":
+def main():
     subscriber = MqttListener(
         client_id="monitor",
         broker=str(Config.MQTT_HOST),

@@ -1,7 +1,7 @@
 import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import Config
+from evoflow_listener.config import Config
 
 
 def __connect():
