@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent
+PROJECT_DIR = Path(__file__).parent  # .parent
+print(PROJECT_DIR)
 ENVFILE_PATH = os.path.join(PROJECT_DIR, ".env")
 
 
