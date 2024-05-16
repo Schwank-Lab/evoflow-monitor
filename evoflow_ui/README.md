@@ -1,8 +1,12 @@
 ## MQTT Messaging Protocol 
+EvoHub mqtt messaging protocol is based on 3 main topics: status, commands and logs; and 2 sub-topic for each main one: experiment and reactor.
+
+Finally, all the logs produced by the reactor fleet are published on the the main topic ```logs```.
 
 ### Monitoring exeriment state
 
-Topic: `experiment_monitor`
+Topic: `status/experiment`
+
 Message: 
 ```
 {
@@ -19,7 +23,8 @@ Message:
 
 ### Montiroing reactor state
 
-Topic: `reactor_monitor`
+Topic: `status/reactor`
+
 Message: 
 ```
 {
@@ -28,16 +33,24 @@ Message:
 }
 ```
 
-### Monitoring reactor logs
 
-Topic: `logs`
-Message:
-```
-{ reactor_id: 'reactor_id', log: string }
-```
 ### Sending commands to the reactor
 
-Topic: `commands`
+Topic: `commands/reactor`
+
+Message: 
+```
+{
+  reactor_id: 'reactor_id',
+  command: 'update_reactor_config',
+  reactor_config: json
+}
+```
+
+### Sending commands to the experiments
+
+Topic: `commands/experiment`
+
 Message:
 ```
 {
@@ -45,6 +58,7 @@ Message:
   command: 'start' | 'stop' | 'pause'
 }
 ```
+
 Message:
 ```
 {
@@ -55,11 +69,26 @@ Message:
 } 
 ```
 
-Message: 
+
+### Monitoring reactor logs
+
+Topic: `logs/reactor`
+
+Message:
 ```
 {
   reactor_id: 'reactor_id',
-  command: 'update_reactor_config',
-  reactor_config: json
+  log: string
 }
+```
 
+Topic: `logs/experiment`
+
+Message:
+```
+{
+  reactor_id: 'reactor_id',
+  experiment_id: 'experiment_id',
+  log: string
+}
+```
