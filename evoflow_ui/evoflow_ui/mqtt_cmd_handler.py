@@ -1,7 +1,5 @@
 import paho.mqtt.client as mqtt
 from evoflow_ui.config import Config
-from typing import TypedDict, Callable
-from evoflow_ui.mqtt_callbacks import parse_experiment_commands, parse_reactor_commands
 
 
 class MqttCmdCentre:
@@ -35,12 +33,12 @@ class MqttCmdCentre:
         self.client.disconnect()
 
 
-def exort_me():
+def command_centre():
     cmd_centre = MqttCmdCentre(
         client_id="cmd_centre",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
-        topics=list(mqtt_handlers.keys()),
+        topics=["commands"],
     )
 
     return cmd_centre

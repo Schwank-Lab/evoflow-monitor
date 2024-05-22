@@ -6,6 +6,8 @@ import base64
 import json
 import psycopg2
 
+from evoflow_ui.mqtt_callbacks import reactor_commands
+
 
 # Database connection function
 def get_reactor_ids():
@@ -34,7 +36,7 @@ def get_reactor_experiment_data(reactor_id):
     reactor_data = cursor.fetchone()
     # Fetch experiment details
     cursor.execute(
-        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s;",
+        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s and status = 'Started';",
         (reactor_id,),
     )
     experiment_data = cursor.fetchone()
@@ -473,14 +475,21 @@ def update_forms(reactor_id):
 @app.callback(
     Output("experiment-status", "children", allow_duplicate=True),
     Input("start-experiment", "n_clicks"),
+    State("reactor-id", "children"),
     State("experiment-id", "children"),
     prevent_initial_call=True,
 )
-def start_experiment(n_clicks, experiment_id):
+def start_experiment(n_clicks, reactor_id, experiment_id):
+    print("ciccio")
+    print(f"{reactor_id}, {experiment_id}")
     if n_clicks:
         # Call the function or API to start the experiment
         # based on the experiment_id
         experiment_status = "Started"
+        print("io" + experiment_status)
+        reactor_commands(
+            reactor_id=reactor_id, experiment_id=experiment_id, command="start"
+        )
         print(experiment_status)
         return experiment_status
     return no_update
@@ -490,14 +499,18 @@ def start_experiment(n_clicks, experiment_id):
 @app.callback(
     Output("experiment-status", "children", allow_duplicate=True),
     Input("stop-experiment", "n_clicks"),
+    State("reactor-id", "children"),
     State("experiment-id", "children"),
     prevent_initial_call=True,
 )
-def stop_experiment(n_clicks, experiment_id):
+def stop_experiment(n_clicks, reactor_id, experiment_id):
     if n_clicks:
         # Call the function or API to stop the experiment
         # based on the experiment_id
         experiment_status = "Stopped"
+        reactor_commands(
+            reactor_id=reactor_id, experiment_id=experiment_id, command="stop"
+        )
         print(experiment_status)
         return experiment_status
     return no_update
@@ -507,14 +520,18 @@ def stop_experiment(n_clicks, experiment_id):
 @app.callback(
     Output("experiment-status", "children", allow_duplicate=True),
     Input("pause-experiment", "n_clicks"),
+    State("reactor-id", "children"),
     State("experiment-id", "children"),
     prevent_initial_call=True,
 )
-def pause_experiment(n_clicks, experiment_id):
+def pause_experiment(n_clicks, reactor_id, experiment_id):
     if n_clicks:
         # Call the function or API to pause the experiment
         # based on the experiment_id
         experiment_status = "Paused"
+        reactor_commands(
+            reactor_id=reactor_id, experiment_id=experiment_id, command="pause"
+        )
         print(experiment_status)
         return experiment_status
     return no_update
