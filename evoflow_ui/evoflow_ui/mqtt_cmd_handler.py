@@ -24,7 +24,7 @@ class MqttCmdCentre:
         broker: str,
         port: int,
         topics: list[str],
-        topics_handlers: EvohubTopics,
+        # topics_handlers: EvohubTopics,
     ):
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
@@ -34,7 +34,7 @@ class MqttCmdCentre:
         self.client.connect(broker, port, 60)
         self.client.loop_start()
         self.topics = topics
-        self.topics_handlers = topics_handlers
+        # self.topics_handlers = topics_handlers
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         print("Connected with result code " + str(rc))
@@ -48,20 +48,21 @@ class MqttCmdCentre:
         self.client.disconnect()
 
 
-def main():
+def exort_me():
     cmd_centre = MqttCmdCentre(
         client_id="cmd_centre",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
         topics=list(mqtt_handlers.keys()),
-        topics_handlers=mqtt_handlers,
+        # topics_handlers=mqtt_handlers,
     )
 
-    try:
-        # Run indefinitely
-        while True:
-            time.sleep(1)  # Sleep to allow MQTT messages to be processed
-    except KeyboardInterrupt:
-        # Gracefully stop the subscriber when interrupted
-        cmd_centre.stop()
-        print("Command Centre is stopped.")
+    return cmd_centre
+    # try:
+    #     # Run indefinitely
+    #     while True:
+    #         time.sleep(1)  # Sleep to allow MQTT messages to be processed
+    # except KeyboardInterrupt:
+    #     # Gracefully stop the subscriber when interrupted
+    #     cmd_centre.stop()
+    #     print("Command Centre is stopped.")
