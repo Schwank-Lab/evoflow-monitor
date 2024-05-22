@@ -1,20 +1,7 @@
-import json
-import time
 import paho.mqtt.client as mqtt
 from evoflow_ui.config import Config
 from typing import TypedDict, Callable
 from evoflow_ui.mqtt_callbacks import parse_experiment_commands, parse_reactor_commands
-
-
-class EvohubTopics(TypedDict):
-    topic: str
-    script: Callable
-
-
-mqtt_handlers: EvohubTopics = {
-    "commands/experiment": lambda x: parse_experiment_commands(x),
-    "commands/reactor": lambda x: parse_reactor_commands(x),
-}
 
 
 class MqttCmdCentre:
@@ -54,15 +41,6 @@ def exort_me():
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
         topics=list(mqtt_handlers.keys()),
-        # topics_handlers=mqtt_handlers,
     )
 
     return cmd_centre
-    # try:
-    #     # Run indefinitely
-    #     while True:
-    #         time.sleep(1)  # Sleep to allow MQTT messages to be processed
-    # except KeyboardInterrupt:
-    #     # Gracefully stop the subscriber when interrupted
-    #     cmd_centre.stop()
-    #     print("Command Centre is stopped.")

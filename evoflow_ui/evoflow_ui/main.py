@@ -175,6 +175,28 @@ app.layout = dbc.Container(
                                     dbc.Row(
                                         [
                                             dbc.Col(
+                                                [
+                                                    dbc.Button(
+                                                        "Start",
+                                                        id="start-experiment",
+                                                        color="success",
+                                                        className="mt-3",
+                                                    ),
+                                                    dbc.Button(
+                                                        "Stop",
+                                                        id="stop-experiment",
+                                                        color="danger",
+                                                        className="mt-3",
+                                                    ),
+                                                    dbc.Button(
+                                                        "Pause",
+                                                        id="pause-experiment",
+                                                        color="warning",
+                                                        className="mt-3",
+                                                    ),
+                                                ]
+                                            ),
+                                            dbc.Col(
                                                 dbc.Button(
                                                     "Update Experiment",
                                                     id="update-experiment",
@@ -445,6 +467,57 @@ def update_forms(reactor_id):
         ]
     else:
         return [no_update] * 6
+
+
+# Callback for the Start button
+@app.callback(
+    Output("experiment-status", "children", allow_duplicate=True),
+    Input("start-experiment", "n_clicks"),
+    State("experiment-id", "children"),
+    prevent_initial_call=True,
+)
+def start_experiment(n_clicks, experiment_id):
+    if n_clicks:
+        # Call the function or API to start the experiment
+        # based on the experiment_id
+        experiment_status = "Started"
+        print(experiment_status)
+        return experiment_status
+    return no_update
+
+
+# Callback for the Stop button
+@app.callback(
+    Output("experiment-status", "children", allow_duplicate=True),
+    Input("stop-experiment", "n_clicks"),
+    State("experiment-id", "children"),
+    prevent_initial_call=True,
+)
+def stop_experiment(n_clicks, experiment_id):
+    if n_clicks:
+        # Call the function or API to stop the experiment
+        # based on the experiment_id
+        experiment_status = "Stopped"
+        print(experiment_status)
+        return experiment_status
+    return no_update
+
+
+# Callback for the Pause button
+@app.callback(
+    Output("experiment-status", "children", allow_duplicate=True),
+    Input("pause-experiment", "n_clicks"),
+    State("experiment-id", "children"),
+    prevent_initial_call=True,
+)
+def pause_experiment(n_clicks, experiment_id):
+    if n_clicks:
+        # Call the function or API to pause the experiment
+        # based on the experiment_id
+        experiment_status = "Paused"
+        print(experiment_status)
+        return experiment_status
+    return no_update
 
 
 # Run the app
