@@ -11,6 +11,8 @@ dash = "^2.16.1"
 dash-bootstrap-components = "^1.6.0"
 psycopg2-binary = "^2.9.9"
 
+[tool.poetry.scripts]
+cmd = "evoflow_ui.mqtt_cmd_handler:main"
 
 [build-system]
 requires = ["poetry-core"]
