@@ -34,11 +34,11 @@ class ExperimentState(Base):
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiment.experiment_id"), nullable=True
     )
-    inc_od: Mapped[float] = mapped_column()
-    inc_tot_dil: Mapped[float] = mapped_column()
-    inc_temp: Mapped[float] = mapped_column()
-    lagoon_temp: Mapped[float] = mapped_column()
-    lagoon_flow_rate: Mapped[float] = mapped_column()
+    inc_od: Mapped[float] = mapped_column(nullable=True)
+    inc_tot_dil: Mapped[float] = mapped_column(nullable=True)
+    inc_temp: Mapped[float] = mapped_column(nullable=True)
+    lagoon_temp: Mapped[float] = mapped_column(nullable=True)
+    lagoon_flow_rate: Mapped[float] = mapped_column(nullable=True)
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
