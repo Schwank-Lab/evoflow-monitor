@@ -1,13 +1,9 @@
 # Use the official Python image from the Docker Hub
-# FROM python:3.11.5-slim-bookworm
 FROM python:3.11.5-alpine
 
-# Install Poetry dependencies
+# Install Poetry 
 RUN apk add --no-cache \
     poetry
-
-# Install Poetry
-#RUN pip install poetry
 
 # Set the working directory in the container
 WORKDIR /app
@@ -26,4 +22,3 @@ COPY . .
 
 # Run the Python script
 CMD ["poetry", "run", "listen"]
-#CMD ["sh"]

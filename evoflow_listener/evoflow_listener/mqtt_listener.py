@@ -1,4 +1,5 @@
 from typing import Callable, TypedDict
+import sys
 import paho.mqtt.client as mqtt
 import json
 import time
@@ -67,21 +68,15 @@ def main():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
-    # Create a file handler
-    file_handler = logging.FileHandler("/var/log/mqtt_listener.log")
-    file_handler.setLevel(logging.ERROR)
-
     # Create a console handler
-    console_handler = logging.StreamHandler()
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
 
     # Create a formatter and add it to the handlers
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
 
     # Add the handlers to the logger
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
     subscriber = MqttListener(
