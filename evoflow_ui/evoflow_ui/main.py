@@ -1,12 +1,16 @@
 # Import necessary libraries
 import dash
-from dash import html, dcc, Input, Output, State, no_update
+from dash import html, dcc, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import base64
 import json
 import psycopg2
 
-from evoflow_ui.mqtt_callbacks import reactor_commands
+from evoflow_ui.mqtt_callbacks import (
+    reactor_commands,
+    save_experiment_command,
+    update_experiment_command,
+)
 
 
 # Database connection function
@@ -36,7 +40,7 @@ def get_reactor_experiment_data(reactor_id):
     reactor_data = cursor.fetchone()
     # Fetch experiment details
     cursor.execute(
-        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s and status = 'Started';",
+        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s and status = 'start';",
         (reactor_id,),
     )
     experiment_data = cursor.fetchone()
@@ -45,22 +49,6 @@ def get_reactor_experiment_data(reactor_id):
     if reactor_data and experiment_data:
         return reactor_data, experiment_data
     return (None, None), (None, None)
-
-
-# Function to save JSON data to database
-def save_json_to_db(table, json_data):
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    # Assuming your table and JSON data structure allows this simple query; adjust as needed
-    cursor.execute(
-        f"UPDATE {table} SET config_data = %s WHERE id = %s;",
-        (json.dumps(json_data), json_data["id"]),
-    )
-    conn.commit()
-    cursor.close()
-    conn.close()
 
 
 # Create a Dash application
@@ -410,18 +398,52 @@ def toggle_modal(n1, n2, is_open):
     return is_open
 
 
+# Callback to handle saving a new experiment
+@app.callback(
+    Output("modal-new-exp", "is_open", allow_duplicate=True),
+    Input("save-new-exp", "n_clicks"),
+    State("new-exp-name", "value"),
+    State("upload-new-exp-config", "contents"),
+    State("reactor-id", "children"),
+    prevent_initial_call=True,
+)
+def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
+    if n_clicks and new_exp_name and contents and reactor_id:
+        content_type, content_string = contents.split(",")
+        decoded = base64.b64decode(content_string)
+        experiment_config = json.loads(decoded.decode("utf-8"))
+
+        save_experiment_command(
+            reactor_id=reactor_id,
+            name=new_exp_name,
+            experiment_config=experiment_config,
+        )
+
+        # Update the UI with the new experiment data
+        return not ctx.states["modal-new-exp.is_open"]
+
+    return no_update
+
+
 # Callback to handle the upload and update of the experiment configuration file
 @app.callback(
     Output("output-exp-config", "children"),
-    [Input("update-experiment", "n_clicks")],
-    [State("upload-exp-config", "contents")],
+    Input("update-experiment", "n_clicks"),
+    State("upload-exp-config", "contents"),
+    State("reactor-id", "children"),
+    State("experiment-id", "children"),
+    prevent_initial_call=True,
 )
-def update_experiment_config(n_clicks, contents):
+def update_experiment_config(n_clicks, contents, reactor_id, experiment_id):
     if n_clicks is not None and contents is not None:
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
         json_data = json.loads(decoded.decode("utf-8"))
-        save_json_to_db("experiment", json_data)
+        update_experiment_command(
+            reactor_id=reactor_id,
+            experiment_id=experiment_id,
+            experiment_config=json_data,
+        )
         return html.Div(["Experiment configuration updated."])
     return no_update
 
@@ -429,15 +451,23 @@ def update_experiment_config(n_clicks, contents):
 # Callback to handle the upload and update of the reactor configuration file
 @app.callback(
     Output("output-reactor-config", "children"),
-    [Input("update-reactor", "n_clicks")],
-    [State("upload-reactor-config", "contents")],
+    Input("update-reactor", "n_clicks"),
+    State("upload-reactor-config", "contents"),
+    State("reactor-id", "children"),
+    State("experiment-id", "children"),
+    prevent_initial_call=True,
 )
-def update_reactor_config(n_clicks, contents):
+def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
     if n_clicks is not None and contents is not None:
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
         json_data = json.loads(decoded.decode("utf-8"))
-        save_json_to_db("reactor", json_data)
+        update_experiment_command(
+            reactor_id=reactor_id,
+            experiment_id=experiment_id,
+            experiment_config=json_data,
+        )
+
         return html.Div(["Reactor configuration updated."])
     return no_update
 

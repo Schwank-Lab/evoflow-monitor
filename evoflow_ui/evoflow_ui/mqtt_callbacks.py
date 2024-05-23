@@ -44,9 +44,15 @@ def update_experiment_command(
     )
     cursor = conn.cursor()
     # update
-    cursor.execute(
-        f"UPDATE exp_config SET exp_config_json = {experiment_config} WHERE experiment_id = {experiment_id}"
-    )
+    query = f"""
+        UPDATE exp_config SET exp_config_json = %s WHERE experiment_id = {experiment_id}
+        """
+    json_string = json.dumps(experiment_config)
+
+    print(query)
+    print(json_string)
+
+    cursor.execute(query, (json_string,))
     conn.commit()
     cursor.close()
     conn.close()
@@ -63,10 +69,10 @@ def update_experiment_command(
     return None
 
 
-def save_experiment_command(
-    reactor_id: int, experiment_id: int, name: str, experiment_config: json
-):
-    # first update status on db
+def save_experiment_command(reactor_id: int, name: str, experiment_config: json):
+    print(f"reactor_id {reactor_id}")
+    print(f"new_exp_name {name}")
+    print(f"exp_config {json.dumps(experiment_config)}")  # first update status on db
     conn = psycopg2.connect(
         dbname=Config.DB_NAME,
         user=Config.DB_USER,
@@ -74,12 +80,17 @@ def save_experiment_command(
         host=Config.DB_HOST,
     )
     cursor = conn.cursor()
+    experiment_id = cursor.execute(
+        f"select max(experiment_id) FROM experiment where reactor_id = {reactor_id}"
+    ).fetchone()
+    print(f"max_experiment_id: {experiment_id}")
+
     # create a new experiment
     cursor.execute(
         f"""
         INSERT INTO experiment (experiment_id, reactor_id, name, timestamp, insert_at, status) 
         VALUES (
-            {experiment_id}, 
+            {experiment_id + 1}, 
             {reactor_id}, 
             '{name}', 
             {int(datetime.date.now())}, 
@@ -102,11 +113,12 @@ def save_experiment_command(
         VALUES (
             {exp_config_id + 1},
             {experiment_id},
-            {experiment_config},
+            %s,
             {int(datetime.date.now())}, 
             {datetime.date.now()}, 
         )
-        """
+        """,
+        (json.dumps(experiment_config),),
     )
     conn.commit()
     cursor.close()
