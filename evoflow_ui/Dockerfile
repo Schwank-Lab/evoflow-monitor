@@ -21,4 +21,4 @@ RUN poetry install
 COPY . .
 
 # Run the Python script
-CMD ["poetry", "run", "listen"]
+CMD ["poetry", "run", "app"]
