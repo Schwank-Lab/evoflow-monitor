@@ -14,10 +14,26 @@ from evoflow_listener.mqtt_callbacks import (
     parse_experiment_commands,
 )
 
-
 class EvohubTopics(TypedDict):
     topic: str
     script: Callable
+
+
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Create a console handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+# Create a formatter and add it to the handlers
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(console_handler)
 
 
 mqtt_handlers: EvohubTopics = {
@@ -56,6 +72,7 @@ class MqttListener:
 
     def on_message(self, client, userdata, msg):
         data = json.loads(msg.payload.decode("utf-8"))
+        logger.info(f"Message on topic {msg.topic} with data {data}")
         self.topics_handlers[msg.topic](data)
 
     def stop(self):
@@ -64,21 +81,6 @@ class MqttListener:
 
 
 def main():
-    # Configure logging
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
-    # Create a console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
-
-    # Create a formatter and add it to the handlers
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    console_handler.setFormatter(formatter)
-
-    # Add the handlers to the logger
-    logger.addHandler(console_handler)
-
     subscriber = MqttListener(
         client_id="monitor",
         broker=str(Config.MQTT_HOST),
@@ -88,6 +90,7 @@ def main():
     )
 
     try:
+        logger.info("Subscriber Started.")
         # Run indefinitely
         while True:
             time.sleep(1)  # Sleep to allow MQTT messages to be processed
