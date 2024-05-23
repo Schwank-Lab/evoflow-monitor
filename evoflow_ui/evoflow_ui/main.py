@@ -538,7 +538,7 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
 
 
 def main():
-    app.run_server(debug=True)
+    app.run_server(debug=True, host="0.0.0.0", port=8181, use_reloader=True)
 
 
 # Run the app
