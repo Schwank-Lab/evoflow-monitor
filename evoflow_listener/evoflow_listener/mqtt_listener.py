@@ -2,6 +2,7 @@ from typing import Callable, TypedDict
 import paho.mqtt.client as mqtt
 import json
 import time
+import logging
 from evoflow_listener.config import Config
 from evoflow_listener.mqtt_callbacks import (
     write_experiment_status_to_db,
@@ -62,6 +63,27 @@ class MqttListener:
 
 
 def main():
+    # Configure logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    # Create a file handler
+    file_handler = logging.FileHandler("/var/log/mqtt_listener.log")
+    file_handler.setLevel(logging.ERROR)
+
+    # Create a console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    # Create a formatter and add it to the handlers
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    # Add the handlers to the logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
     subscriber = MqttListener(
         client_id="monitor",
         broker=str(Config.MQTT_HOST),
@@ -74,7 +96,9 @@ def main():
         # Run indefinitely
         while True:
             time.sleep(1)  # Sleep to allow MQTT messages to be processed
+    except Exception as e:
+        logger.error(f"An error occurred: {e}", exc_info=True)
     except KeyboardInterrupt:
         # Gracefully stop the subscriber when interrupted
         subscriber.stop()
-        print("Subscriber stopped.")
+        logger.info("Subscriber stopped.")

@@ -1,3 +1,6 @@
+from evoflow_listener.db import idec_engine
+from sqlalchemy import insert
+from sqlalchemy.orm import sessionmaker
 from evoflow_listener.db.tables_definition.schemas.idec import (
     Reactor,
     ReactorConfig,
@@ -5,10 +8,6 @@ from evoflow_listener.db.tables_definition.schemas.idec import (
     ExpConfig,
     Experiment,
 )
-
-from evoflow_listener.db import idec_engine
-from sqlalchemy import insert
-from sqlalchemy.orm import sessionmaker
 
 
 def write_to_database(
