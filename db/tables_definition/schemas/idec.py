@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
+from sqlalchemy.types import JSON
 from db.tables_definition.base import Base
 
 
@@ -19,7 +20,7 @@ class ReactorConfig(Base):
     __tablename__ = "reactor_config"
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
-    reactor_config_json: Mapped[str] = mapped_column()
+    reactor_config_json: Mapped[JSON] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
@@ -46,10 +47,10 @@ class ExperimentState(Base):
 
 
 class ExpConfig(Base):
-    __tablename__ = "exp_config"
+    __tablename__ = "experiment_config"
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
-    exp_config_json: Mapped[str] = mapped_column()
+    exp_config_json: Mapped[JSON] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
@@ -71,8 +72,6 @@ class Experiment(Base):
     reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
         back_populates="experiment"
     )
-    reactor_states: Mapped[List["ReactorState"]] = relationship(
-        back_populates="experiment"
-    )
+    reactor_states: Mapped[List["Reactor"]] = relationship(back_populates="experiment")
     exp_configs: Mapped[List["ExpConfig"]] = relationship(back_populates="experiment")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
