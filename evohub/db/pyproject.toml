@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "db"
-version = "0.1.0"
+version = "0.1.4"
 description = ""
 authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"

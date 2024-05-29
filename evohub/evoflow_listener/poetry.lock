@@ -311,7 +311,7 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "db"
-version = "0.1.0"
+version = "0.1.4"
 description = ""
 optional = false
 python-versions = "^3.12"

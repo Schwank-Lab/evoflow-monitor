@@ -1,9 +1,13 @@
 from sqlalchemy.orm import MappedAsDataclass
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.types import JSON
+from typing import Any
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
     __abstract__ = True
+
+    type_annotation_map = {dict[str, Any]: JSON}
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.__dict__}>"

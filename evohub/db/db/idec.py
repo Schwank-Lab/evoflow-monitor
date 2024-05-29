@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import List
+from typing import List, Any
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
-from sqlalchemy.types import JSON
-from evohub.db.db.base import Base
+
+from db.base import Base
 
 
 class Reactor(Base):
@@ -20,7 +20,7 @@ class ReactorConfig(Base):
     __tablename__ = "reactor_config"
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
-    reactor_config_json: Mapped[JSON] = mapped_column()
+    reactor_config_json: Mapped[dict[str, Any]] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
@@ -50,7 +50,7 @@ class ExpConfig(Base):
     __tablename__ = "experiment_config"
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
-    exp_config_json: Mapped[JSON] = mapped_column()
+    exp_config_json: Mapped[dict[str, Any]] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
