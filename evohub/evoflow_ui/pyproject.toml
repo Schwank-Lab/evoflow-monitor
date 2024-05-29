@@ -8,11 +8,11 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 dash = "^2.16.1"
+paho-mqtt = "^2.1.0"
 dash-bootstrap-components = "^1.6.0"
 psycopg2-binary = "^2.9.9 "
-db = { path =  "../db" }
-evoflow_utils = { path = "../evoflow_utils" }
-paho-mqtt = "^2.1.0"
+db = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "deploy", subdirectory = "evohub/db" }
+evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "deploy", subdirectory = "evohub/evoflow_utils" }
 
 
 [tool.poetry.scripts]
