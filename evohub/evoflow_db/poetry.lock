@@ -424,7 +424,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "deploy"
-resolved_reference = "0d7eac08a5c48bb399492d9091dca77824644aff"
+resolved_reference = "f1cdcbfe5b669d667feef49a147c0ca96c834250"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]

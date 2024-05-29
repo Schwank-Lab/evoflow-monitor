@@ -1,9 +1,8 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.11.5-alpine
+FROM python:3.12-alpine
 
 # Install Poetry 
-RUN apk add --no-cache \
-    poetry
+RUN apk add --no-cache poetry
 
 # Set the working directory in the container
 WORKDIR /app
