@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import logging
-from evoflow_utils.evoflow_utils.config import Config
+from evoflow_utils.config import Config
 from evoflow_listener.mqtt_callbacks import (
     write_experiment_status_to_db,
     write_reactor_status_to_db,

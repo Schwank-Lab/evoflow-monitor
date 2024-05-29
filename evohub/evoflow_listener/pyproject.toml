@@ -6,14 +6,12 @@ authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 paho-mqtt = "^2.1.0"
 sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
-setuptools = "^69.5.1"
-python-dotenv = "^1.0.1"
-db = { "../db" }
-utilities = { "../evoflow_utils" }
+db = { path = "../db" }
+evoflow_utils = { path = "../evoflow_utils" }
 
 [tool.poetry.scripts]
 listen = "evoflow_listener.mqtt_listener:main"

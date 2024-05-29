@@ -1,6 +1,5 @@
 import paho.mqtt.client as mqtt
-from evoflow_ui.config import Config
-
+from evoflow_utilities.config import Config
 
 class MqttCmdCentre:
     def __init__(

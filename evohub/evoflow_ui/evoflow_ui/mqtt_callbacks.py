@@ -2,7 +2,7 @@ import json
 import datetime
 import psycopg2
 from evoflow_ui.mqtt_cmd_handler import command_centre
-from evoflow_ui.config import Config
+from evoflow_utilities.config import Config
 
 
 def reactor_commands(reactor_id: int, experiment_id: int, command: str):

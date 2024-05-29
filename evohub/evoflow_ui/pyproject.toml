@@ -6,12 +6,12 @@ authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 dash = "^2.16.1"
 dash-bootstrap-components = "^1.6.0"
 psycopg2-binary = "^2.9.9 "
-db = { "../db" }
-utilities = { "../evoflow_utils" }
+db = { path =  "../db" }
+evoflow_utils = { path = "../evoflow_utils" }
 
 
 [tool.poetry.scripts]

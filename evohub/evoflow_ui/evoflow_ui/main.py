@@ -1,5 +1,4 @@
 # Import necessary libraries
-import dash
 from dash import html, dcc, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import base64

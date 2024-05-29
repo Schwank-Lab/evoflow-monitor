@@ -1,7 +1,7 @@
-from evoflow_listener.db import idec_engine
+from db import idec_engine
 from sqlalchemy import insert
 from sqlalchemy.orm import sessionmaker
-from evoflow_listener.db.tables_definition.schemas.idec import (
+from db.tables_definition.schemas.idec import (
     Reactor,
     ReactorConfig,
     ExperimentState,
