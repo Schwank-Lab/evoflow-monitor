@@ -1,7 +1,7 @@
 from db import idec_engine
 from sqlalchemy import insert
 from sqlalchemy.orm import sessionmaker
-from db.tables_definition.schemas.idec import (
+from db.idec import (
     Reactor,
     ReactorConfig,
     ExperimentState,
