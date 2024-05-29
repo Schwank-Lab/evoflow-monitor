@@ -1,7 +1,7 @@
 import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import Config
+from evohub.config import Config
 
 
 def __connect():
