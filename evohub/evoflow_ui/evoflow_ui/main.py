@@ -1,4 +1,5 @@
 # Import necessary libraries
+import dash
 from dash import html, dcc, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import base64
@@ -557,7 +558,7 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
     if n_clicks:
         # Call the function or API to pause the experiment
         # based on the experiment_id
-        experiment_status = "Paused"
+        experiment_status = "Pausede"
         reactor_commands(
             reactor_id=reactor_id, experiment_id=experiment_id, command="pause"
         )
