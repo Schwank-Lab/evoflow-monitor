@@ -42,7 +42,7 @@ class ExperimentState(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="reactor_state")
+    experiment: Mapped["Experiment"] = relationship(back_populates="experiment_states")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
@@ -72,6 +72,8 @@ class Experiment(Base):
     reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
         back_populates="experiment"
     )
-    reactor_states: Mapped[List["Reactor"]] = relationship(back_populates="experiment")
+    experiment_states: Mapped[List["ExperimentState"]] = relationship(
+        back_populates="experiment"
+    )
     exp_configs: Mapped[List["ExpConfig"]] = relationship(back_populates="experiment")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
