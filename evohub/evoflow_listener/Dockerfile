@@ -2,7 +2,7 @@
 FROM python:3.12-alpine
 
 # Install Poetry 
-RUN apk add --no-cache poetry
+RUN apk add --no-cache poetry openssh
 
 # Set the working directory in the container
 WORKDIR /app
