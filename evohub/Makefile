@@ -6,9 +6,7 @@ help:
 .PHONY: help build_listener build_ui
 
 build_listener: ## Build the listener Docker image
-	cd evoflow_listener && docker build --no-cache  --build-arg ~/.ssh/id_jdksjskjs 
-	
--t evoflow_listener .
+	cd evoflow_listener && docker build --no-cache --build-arg ssh_pub_key="$(cat ~/.ssh/idec_github.pub)" -t evoflow_listener .
 
 build_ui: ## Build the UI Docker image
-	cd evoflow_ui && docker build --no-cache -t evoflow_ui .
+	cd evoflow_ui && docker build --no-cache --build-arg ssh_pub_key="$(cat ~/.ssh/idec_github.pub)" -t evoflow_ui .
