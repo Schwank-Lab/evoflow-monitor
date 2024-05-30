@@ -6,8 +6,7 @@ authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
-poetry-plugin-dotenv = "^2.1.6"
+python = "^3.11"
 python-dotenv = "^1.0.1"
 
 
