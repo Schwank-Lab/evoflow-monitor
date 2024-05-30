@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "evoflow_db"
+version = "0.1.4"
+description = ""
+authors = ["graziano <myemail@mysite.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "deploy", subdirectory = "evohub/evoflow_utils" }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
