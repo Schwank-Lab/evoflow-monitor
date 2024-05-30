@@ -423,7 +423,7 @@ evoflow_utils = {git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch 
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "deploy"
-resolved_reference = "f1cdcbfe5b669d667feef49a147c0ca96c834250"
+resolved_reference = "2ddce1ca04c4edbd69b05de2b408946efa9b5e1d"
 subdirectory = "evohub/evoflow_db"
 
 [[package]]
@@ -443,7 +443,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "deploy"
-resolved_reference = "f1cdcbfe5b669d667feef49a147c0ca96c834250"
+resolved_reference = "2ddce1ca04c4edbd69b05de2b408946efa9b5e1d"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]
