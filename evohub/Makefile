@@ -6,7 +6,7 @@ help:
 .PHONY: help build_listener build_ui
 
 build_listener: ## Build the listener Docker image
-	cd evoflow_listener && docker build --no-cache -t evoflow_listener .
+	cd evoflow_listener && docker build --no-cache -t evoflow_listener --progress=plain . &> build_listener.log 
 
 build_ui: ## Build the UI Docker image
-	cd evoflow_ui && docker build --no-cache -t evoflow_ui .
+	cd evoflow_ui && docker build --no-cache -t evoflow_ui --progress=plain . &> buil_ui.log 

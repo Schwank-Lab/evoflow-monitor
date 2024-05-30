@@ -3,7 +3,7 @@ from typing import List, Any
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
 
-from db.base import Base
+from evoflow_db.base import Base
 
 
 class Reactor(Base):
