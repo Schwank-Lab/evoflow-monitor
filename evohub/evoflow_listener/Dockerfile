@@ -7,11 +7,7 @@ RUN apk add --no-cache poetry openssh
 # Set the working directory in the container
 WORKDIR /app
 
-# Add README
-RUN touch README.md
-
-# Copy the Poetry lock file and the pyproject.toml
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml poetry.lock README.md ./
 
 # Install dependencies
 RUN poetry install 
