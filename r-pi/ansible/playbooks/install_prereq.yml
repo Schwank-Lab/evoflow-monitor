@@ -1,0 +1,132 @@
+---
+- hosts: pi
+  become: yes
+  vars:
+    to_install:
+      - git
+      - vim 
+      - tmux
+      - curl
+      - wget
+      - make
+      - pipx
+      - libpq-dev
+      - gcc 
+    docker_deps:
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+    arch_mapping:
+      x86_64: amd64
+      aarch64: arm64
+
+  tasks:
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+      tags:
+        - update_apt
+        - install_system_deps
+        - install_docker
+
+    - name: Install System deps
+      ansible.builtin.apt:
+        name: "{{ to_install }}"
+        state: present
+      tags:
+        - install_system_deps
+        - install_docker
+
+    - name: Install Docker deps
+      ansible.builtin.apt:
+        name: "{{ docker_deps }}"
+        state: present
+      tags:
+        - install_docker
+
+    - name: Create directory for Docker's GPG key
+      ansible.builtin.file:
+          path: /etc/apt/keyrings
+          state: directory
+          mode: '0755'
+      tags:
+        - install_docker
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        keyring: /etc/apt/keyrings/docker.gpg
+        state: present
+      tags:
+        - install_docker
+
+    - name: Print architecture variables
+      debug:
+        msg: "Architecture: {{ ansible_architecture }}, Codename: {{ ansible_lsb.codename }}"
+      tags:
+        - install_docker
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ arch_mapping[ansible_architecture] | default(ansible_architecture) }}
+          signed-by=/etc/apt/keyrings/docker.gpg]
+          https://download.docker.com/linux/debian {{ ansible_lsb.codename }} stable
+        filename: docker
+        state: present
+      tags:
+        - install_docker
+
+    - name: Install Docker and related packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+      tags:
+        - install_docker
+
+    - name: Add Docker group
+      ansible.builtin.group:
+        name: docker
+        state: present
+      tags:
+        - install_docker
+
+    - name: Add user to Docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+      tags:
+        - install_docker
+
+    - name: Enable and start Docker services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - docker.service
+        - containerd.service
+      tags:
+        - install_docker
+
+
+    - name: Reboot the system
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible after software installation"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+      tags:
+        - reboot
+        - install_docker
