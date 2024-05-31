@@ -13,19 +13,6 @@ from evoflow_ui.mqtt_callbacks import (
 )
 
 
-# Database connection function
-def get_reactor_ids():
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id FROM reactor;")
-    reactor_ids = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [str(id[0]) for id in reactor_ids]
-
-
 # Function to fetch reactor and experiment data
 def get_reactor_experiment_data(reactor_id):
     conn = psycopg2.connect(
@@ -63,8 +50,8 @@ app.layout = dbc.Container(
                     html.H3("Select Reactor"),
                     dcc.Dropdown(
                         id="reactor-id-dropdown",
-                        options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                        placeholder="Select a Reactor ID",
+                        # options=[{"label": i, "value": i} for i in get_reactor_ids()],
+                        placeholder="Select a Reactor Name",
                     ),
                 ]
             ),
@@ -387,6 +374,28 @@ app.layout = dbc.Container(
 )
 
 
+# Database connection function
+@app.callback(
+    [
+        Output("reactor-id-drowdown", "options"),
+        Output("reactor-id", "children"),
+    ]
+)
+def get_reactor_ids():
+    conn = psycopg2.connect(
+        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT reactor_id, name FROM reactor;")
+    reactor_data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [
+        [str(id[0]) for id in reactor_data[0]],
+        reactor_data[1],
+    ]
+
+
 @app.callback(
     Output("modal-new-exp", "is_open"),
     [Input("open-new-exp-modal", "n_clicks"), Input("save-new-exp", "n_clicks")],
@@ -479,11 +488,12 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("experiment-name", "children"),
         Output("experiment-datetime", "children"),
         Output("experiment-status", "children"),
-        Output("reactor-id", "children"),
+        # Output("reactor-id", "children"),
         Output("reactor-name", "children"),
         Output("network-id", "children"),
     ],
-    [Input("reactor-id-dropdown", "value")],
+    # [Input("reactor-id-dropdown", "value")],
+    [Input("reactor-id", "children")],
 )
 def update_forms(reactor_id):
     if reactor_id:
@@ -493,7 +503,7 @@ def update_forms(reactor_id):
             experiment_data[1],  # experiment Name
             experiment_data[2],  # experiment Date Time
             experiment_data[3],  # experiment Status
-            reactor_id,  # Reactor ID (from dropdown, same as input)
+            # reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_data[0],  # Reactor Name
             reactor_data[1],  # Network ID
         ]
@@ -510,7 +520,6 @@ def update_forms(reactor_id):
     prevent_initial_call=True,
 )
 def start_experiment(n_clicks, reactor_id, experiment_id):
-    print("ciccio")
     print(f"{reactor_id}, {experiment_id}")
     if n_clicks:
         # Call the function or API to start the experiment
