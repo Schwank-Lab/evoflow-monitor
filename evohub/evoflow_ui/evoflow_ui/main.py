@@ -13,19 +13,6 @@ from evoflow_ui.mqtt_callbacks import (
 )
 
 
-# Database connection function
-def get_reactor_ids():
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id FROM reactor;")
-    reactor_ids = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [str(id[0]) for id in reactor_ids]
-
-
 # Function to fetch reactor and experiment data
 def get_reactor_experiment_data(reactor_id):
     conn = psycopg2.connect(
@@ -63,8 +50,8 @@ app.layout = dbc.Container(
                     html.H3("Select Reactor"),
                     dcc.Dropdown(
                         id="reactor-id-dropdown",
-                        options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                        placeholder="Select a Reactor ID",
+                        # options=[{"label": i, "value": i} for i in get_reactor_ids()],
+                        placeholder="Select a Reactor Name",
                     ),
                 ]
             ),
@@ -385,6 +372,21 @@ app.layout = dbc.Container(
     fluid=True,
     className="py-4",
 )
+
+
+@app.callback(
+    Output("reactor-id-dropdown", "options"), Input("reactor-id-dropdown", "value")
+)
+def get_reactor_ids():
+    conn = psycopg2.connect(
+        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT reactor_id, name FROM reactor;")
+    reactor_data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return {name: str(id[0]) for id, name in reactor_data}
 
 
 @app.callback(
