@@ -16,6 +16,7 @@
         mode: '0755'
 
     - name: Clone GitHub repository
+      become_user: "{{ ansible_user }}"
       ansible.builtin.git:
         repo: "git@github.com:Schwank-Lab/evoflow-monitor.git"
         dest: "/home/{{ ansible_user }}/Workspace"
