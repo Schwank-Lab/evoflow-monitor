@@ -1,0 +1,14 @@
+---
+- hosts: pi
+  become: yes
+  tasks:
+    - name: Ensure make is installed
+      ansible.builtin.package:
+        name: make
+        state: present
+
+    - name: Run Make install portainer
+      community.general.make:
+        chdir: "/home/{{ ansible_user }}/Workspace/r-pi"
+        target: install_portainer
+      become: false
