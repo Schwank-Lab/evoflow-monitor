@@ -87,11 +87,16 @@
       loop:
         - docker-ce
         - docker-ce-cli
-        - containerd.io
-        - docker-buildx-plugin
-        - docker-compose-plugin
+        - docker-compose
+        # - containerd.io
+        # - docker-buildx-plugin
+        # - docker-compose-plugin
       tags:
         - install_docker
+
+    - name: Set permission to Docker socket
+      file: /var/run/docker.sock
+      mode: 666    
 
     - name: Add Docker group
       ansible.builtin.group:
