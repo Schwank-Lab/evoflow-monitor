@@ -194,6 +194,7 @@ app.layout = dbc.Container(
                                                         id="open-new-exp-modal",
                                                         color="primary",
                                                         className="mt-3",
+                                                        disabled=True,
                                                     ),
                                                     dbc.Modal(
                                                         [
@@ -521,7 +522,10 @@ def update_forms(reactor_id):
 
 # Callback for the Start button
 @app.callback(
-    Output("experiment-status", "children", allow_duplicate=True),
+    [
+        Output("experiment-status", "children", allow_duplicate=True),
+        Output("open-new-exp-modal", "disabled", allow_duplicate=True),
+    ],
     Input("start-experiment", "n_clicks"),
     State("reactor-id", "children"),
     State("experiment-id", "children"),
@@ -538,13 +542,16 @@ def start_experiment(n_clicks, reactor_id, experiment_id):
             reactor_id=reactor_id, experiment_id=experiment_id, command="start"
         )
         print(experiment_status)
-        return experiment_status
+        return [experiment_status, True]
     return no_update
 
 
 # Callback for the Stop button
 @app.callback(
-    Output("experiment-status", "children", allow_duplicate=True),
+    [
+        Output("experiment-status", "children", allow_duplicate=True),
+        Output("open-new-exp-modal", "disabled", allow_duplicate=True),
+    ],
     Input("stop-experiment", "n_clicks"),
     State("reactor-id", "children"),
     State("experiment-id", "children"),
@@ -559,7 +566,7 @@ def stop_experiment(n_clicks, reactor_id, experiment_id):
             reactor_id=reactor_id, experiment_id=experiment_id, command="stop"
         )
         print(experiment_status)
-        return experiment_status
+        return [experiment_status, False]
     return no_update
 
 
