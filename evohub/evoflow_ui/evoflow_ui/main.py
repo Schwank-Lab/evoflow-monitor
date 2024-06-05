@@ -53,8 +53,6 @@ app.layout = dbc.Container(
                         children=[
                             dcc.Dropdown(
                                 id="reactor-id-dropdown",
-                                # options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                                placeholder="Select a Reactor Name",
                             ),
                         ],
                     ),
@@ -391,11 +389,11 @@ def get_reactor_ids(n_clicks):
         dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY reactor_id;")
+    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY name;")
     reactor_data = cursor.fetchall()
     cursor.close()
     conn.close()
-    return {name: str(id) for id, name in reactor_data}
+    return [{"label": name, "value": str(id)} for id, name in reactor_data]
 
 
 @app.callback(
@@ -490,14 +488,15 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("experiment-name", "children"),
         Output("experiment-datetime", "children"),
         Output("experiment-status", "children"),
-        # Output("reactor-id", "children"),
+        Output("reactor-id", "children"),
         Output("reactor-name", "children"),
         Output("network-id", "children"),
     ],
-    # [Input("reactor-id-dropdown", "value")],
-    [Input("reactor-id", "children")],
+    [Input("reactor-id-dropdown", "value")],
+    # [Input("reactor-id", "children")],
 )
 def update_forms(reactor_id):
+    print(reactor_id)
     if reactor_id:
         reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
         return [
@@ -505,7 +504,7 @@ def update_forms(reactor_id):
             experiment_data[1],  # experiment Name
             experiment_data[2],  # experiment Date Time
             experiment_data[3],  # experiment Status
-            # reactor_id,  # Reactor ID (from dropdown, same as input)
+            reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_data[0],  # Reactor Name
             reactor_data[1],  # Network ID
         ]
