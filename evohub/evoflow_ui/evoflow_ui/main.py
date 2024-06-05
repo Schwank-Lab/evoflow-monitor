@@ -48,10 +48,13 @@ app.layout = dbc.Container(
             dbc.CardBody(
                 [
                     html.H3("Select Reactor"),
-                    dcc.Dropdown(
-                        id="reactor-id-dropdown",
-                        # options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                        placeholder="Select a Reactor Name",
+                    html.Div(
+                        id="reactor-id-dropdown-parent",
+                        children=[
+                            dcc.Dropdown(
+                                id="reactor-id-dropdown",
+                            ),
+                        ],
                     ),
                 ]
             ),
@@ -378,29 +381,22 @@ app.layout = dbc.Container(
 
 
 @app.callback(
-    [
-        Output("reactor-id-dropdown", "options"),
-        Output("start-button", "disabled"),
-        Output("stop-button", "disabled"),
-        Output("pause-button", "disabled"),
-    ],
-    [Input("reactor-id-dropdown", "value")],
+    Output("reactor-id-dropdown", "options"),
+    Input("reactor-id-dropdown-parent", "n_clicks"),
 )
-def get_reactor_ids():
+def get_reactor_ids(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
     conn = psycopg2.connect(
         dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id, name FROM reactor;")
+    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY name;")
     reactor_data = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [
-        {name: str(id[0]) for id, name in reactor_data},
-        True,
-        True,
-        True,
-    ]
+    return [{"label": name, "value": str(id)} for id, name in reactor_data]
 
 
 @app.callback(
@@ -514,7 +510,7 @@ def update_forms(reactor_id):
             reactor_data[1],  # Network ID
         ]
     else:
-        return [no_update] * 6
+        return [no_update] * 7
 
 
 # Callback for the Start button
@@ -526,7 +522,6 @@ def update_forms(reactor_id):
     prevent_initial_call=True,
 )
 def start_experiment(n_clicks, reactor_id, experiment_id):
-    print("ciccio")
     print(f"{reactor_id}, {experiment_id}")
     if n_clicks:
         # Call the function or API to start the experiment
