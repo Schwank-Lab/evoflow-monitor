@@ -161,21 +161,21 @@ app.layout = dbc.Container(
                                                         id="start-experiment",
                                                         color="success",
                                                         className="mt-3",
-                                                        discabled=True,
+                                                        disabled=True,
                                                     ),
                                                     dbc.Button(
                                                         "Stop",
                                                         id="stop-experiment",
                                                         color="danger",
                                                         className="mt-3",
-                                                        discabled=True,
+                                                        disabled=True,
                                                     ),
                                                     dbc.Button(
                                                         "Pause",
                                                         id="pause-experiment",
                                                         color="warning",
                                                         className="mt-3",
-                                                        discabled=True,
+                                                        disabled=True,
                                                     ),
                                                 ]
                                             ),
@@ -494,6 +494,9 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("reactor-id", "children"),
         Output("reactor-name", "children"),
         Output("network-id", "children"),
+        Output("start-experiment", "disabled"),
+        Output("pause-experiment", "disabled"),
+        Output("stop-experiment", "disabled"),
     ],
     [Input("reactor-id-dropdown", "value")],
 )
@@ -508,9 +511,12 @@ def update_forms(reactor_id):
             reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_data[0],  # Reactor Name
             reactor_data[1],  # Network ID
+            False,
+            False,
+            False,
         ]
     else:
-        return [no_update] * 7
+        return [no_update] * 10
 
 
 # Callback for the Start button
