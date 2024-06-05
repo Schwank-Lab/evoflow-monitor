@@ -89,5 +89,5 @@
         - "{{ mount_point }}/postgres"
         - "{{ mount_point }}/grafana"
 
-    - name: Install backend
-      command: docker compose -f "{{ stack_location }}/portainer_stack.yml" up -d
+    # - name: Install backend
+    #   command: docker compose -f "{{ stack_location }}/portainer_stack.yml" up -d

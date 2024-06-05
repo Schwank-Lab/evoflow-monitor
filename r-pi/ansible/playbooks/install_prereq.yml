@@ -95,8 +95,9 @@
         - install_docker
 
     - name: Set permission to Docker socket
-      file: /var/run/docker.sock
-      mode: 666    
+      file: 
+        path: /var/run/docker.sock
+        mode: 666    
 
     - name: Add Docker group
       ansible.builtin.group:

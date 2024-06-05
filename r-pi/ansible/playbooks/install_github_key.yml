@@ -62,11 +62,11 @@
         path: /home/{{ ansible_user }}/.ssh/known_hosts
         state: present
 
-    - name: Test SSH connection to GitHub
-      command: ssh -T git@github.com
-      register: ssh_test_output
-      ignore_errors: yes
+    # - name: Test SSH connection to GitHub
+    #   command: ssh -T git@github.com
+    #   register: ssh_test_output
+    #   ignore_errors: yes
 
-    - name: Display SSH connection test output
-      debug:
-        msg="{{ ssh_test_output.stdout }}"
+    # - name: Display SSH connection test output
+    #   debug:
+    #     msg="{{ ssh_test_output.stdout }}"
