@@ -16,5 +16,5 @@ cli = ["click (>=5.0)"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "ccc672b098237e4e0a0c441c6f7f8ace87e2775335dc41aad5eea3516f3cbd12"
+python-versions = "^3.11"
+content-hash = "6979e5902f2dc33e2caa9e97311f72d232548235d422444850e114047f2980fb"
