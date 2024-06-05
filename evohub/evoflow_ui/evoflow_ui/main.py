@@ -493,10 +493,8 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("network-id", "children"),
     ],
     [Input("reactor-id-dropdown", "value")],
-    # [Input("reactor-id", "children")],
 )
 def update_forms(reactor_id):
-    print(reactor_id)
     if reactor_id:
         reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
         return [
