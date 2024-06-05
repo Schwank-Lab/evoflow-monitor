@@ -48,10 +48,15 @@ app.layout = dbc.Container(
             dbc.CardBody(
                 [
                     html.H3("Select Reactor"),
-                    dcc.Dropdown(
-                        id="reactor-id-dropdown",
-                        # options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                        placeholder="Select a Reactor Name",
+                    html.Div(
+                        id="reactor-id-dropdown-parent",
+                        children=[
+                            dcc.Dropdown(
+                                id="reactor-id-dropdown",
+                                # options=[{"label": i, "value": i} for i in get_reactor_ids()],
+                                placeholder="Select a Reactor Name",
+                            ),
+                        ],
                     ),
                 ]
             ),
@@ -374,26 +379,23 @@ app.layout = dbc.Container(
 )
 
 
-# Database connection function
 @app.callback(
-    [
-        Output("reactor-id-drowdown", "options"),
-        Output("reactor-id", "children"),
-    ]
+    Output("reactor-id-dropdown", "options"),
+    Input("reactor-id-dropdown-parent", "n_clicks"),
 )
-def get_reactor_ids():
+def get_reactor_ids(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
     conn = psycopg2.connect(
         dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id, name FROM reactor;")
+    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY reactor_id;")
     reactor_data = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [
-        [str(id[0]) for id in reactor_data[0]],
-        reactor_data[1],
-    ]
+    return {name: str(id) for id, name in reactor_data}
 
 
 @app.callback(
@@ -508,7 +510,7 @@ def update_forms(reactor_id):
             reactor_data[1],  # Network ID
         ]
     else:
-        return [no_update] * 6
+        return [no_update] * 7
 
 
 # Callback for the Start button
