@@ -53,8 +53,6 @@ app.layout = dbc.Container(
                         children=[
                             dcc.Dropdown(
                                 id="reactor-id-dropdown",
-                                # options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                                placeholder="Select a Reactor Name",
                             ),
                         ],
                     ),
@@ -391,11 +389,11 @@ def get_reactor_ids(n_clicks):
         dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY reactor_id;")
+    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY name;")
     reactor_data = cursor.fetchall()
     cursor.close()
     conn.close()
-    return {name: str(id) for id, name in reactor_data}
+    return [{"label": name, "value": str(id)} for id, name in reactor_data]
 
 
 @app.callback(
@@ -521,7 +519,6 @@ def update_forms(reactor_id):
     prevent_initial_call=True,
 )
 def start_experiment(n_clicks, reactor_id, experiment_id):
-    print("ciccio")
     print(f"{reactor_id}, {experiment_id}")
     if n_clicks:
         # Call the function or API to start the experiment
