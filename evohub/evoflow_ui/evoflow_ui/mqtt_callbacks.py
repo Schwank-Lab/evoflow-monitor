@@ -5,7 +5,7 @@ from evoflow_ui.mqtt_cmd_handler import command_centre
 from evoflow_utils.config import Config
 
 
-def reactor_commands(reactor_id: int, experiment_id: int, command: str):
+def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: str):
     # first update status on db
     conn = psycopg2.connect(
         dbname=Config.DB_NAME,
@@ -27,7 +27,7 @@ def reactor_commands(reactor_id: int, experiment_id: int, command: str):
         "command": command,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
+    command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
 
     return None
 
@@ -64,12 +64,12 @@ def update_experiment_command(
         "experiment_config": experiment_config,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
+    command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
 
     return None
 
 
-def save_experiment_command(reactor_id: int, name: str, experiment_config: json):
+def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
     print(f"reactor_id {reactor_id}")
     print(f"new_exp_name {name}")
     print(f"exp_config {json.dumps(experiment_config)}")  # first update status on db
@@ -131,6 +131,6 @@ def save_experiment_command(reactor_id: int, name: str, experiment_config: json)
         "experiment_config": experiment_config,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
+    command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
 
     return None

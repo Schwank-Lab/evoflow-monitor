@@ -7,8 +7,8 @@ import json
 import psycopg2
 
 from evoflow_ui.mqtt_callbacks import (
-    reactor_commands,
-    save_experiment_command,
+    start_stop_pause_experiment,
+    new_experiment_command,
     update_experiment_command,
 )
 
@@ -27,12 +27,16 @@ def get_reactor_experiment_data(reactor_id):
     reactor_data = cursor.fetchone()
     # Fetch experiment details
     cursor.execute(
-        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s and status = 'start';",
+        """
+        SELECT experiment_id, name, inserted_at, status 
+        FROM experiment WHERE reactor_id = %s and (status = 'start' or status = 'pause');
+        """,
         (reactor_id,),
     )
     experiment_data = cursor.fetchone()
     cursor.close()
     conn.close()
+
     if reactor_data and experiment_data:
         return reactor_data, experiment_data
     return (None, None), (None, None)
@@ -480,7 +484,7 @@ def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
         decoded = base64.b64decode(content_string)
         experiment_config = json.loads(decoded.decode("utf-8"))
 
-        save_experiment_command(
+        new_experiment_command(
             reactor_id=reactor_id,
             name=new_exp_name,
             experiment_config=experiment_config,
@@ -558,6 +562,7 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
 def update_forms(reactor_id):
     if reactor_id:
         reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
+        print(reactor_id, experiment_data)
         return [
             experiment_data[0],  # experiment ID
             experiment_data[1],  # experiment Name
@@ -591,7 +596,7 @@ def start_experiment(n_clicks, reactor_id, experiment_id):
         # Call the function or API to start the experiment
         # based on the experiment_id
         experiment_status = "Started"
-        reactor_commands(
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="start"
         )
         return [experiment_status, True]
@@ -614,7 +619,7 @@ def stop_experiment(n_clicks, reactor_id, experiment_id):
         # Call the function or API to stop the experiment
         # based on the experiment_id
         experiment_status = "Stopped"
-        reactor_commands(
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="stop"
         )
         print(experiment_status)
@@ -635,7 +640,7 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
         # Call the function or API to pause the experiment
         # based on the experiment_id
         experiment_status = "Paused"
-        reactor_commands(
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="pause"
         )
         print(experiment_status)
