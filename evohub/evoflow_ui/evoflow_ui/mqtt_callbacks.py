@@ -46,7 +46,7 @@ def update_experiment_command(
     cursor = conn.cursor()
     # update
     query = f"""
-        UPDATE exp_config SET exp_config_json = %s WHERE experiment_id = {experiment_id}
+        UPDATE experiment_config SET exp_config_json = %s WHERE experiment_id = {experiment_id}
         """
     json_string = json.dumps(experiment_config)
 
