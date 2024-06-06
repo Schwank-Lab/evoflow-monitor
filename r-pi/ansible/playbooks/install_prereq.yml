@@ -1,5 +1,5 @@
 ---
-- hosts: pi
+- hosts: all
   become: yes
   vars:
     to_install:
@@ -12,6 +12,7 @@
       - pipx
       - libpq-dev
       - gcc 
+      - dhcpcd5
     docker_deps:
       - apt-transport-https
       - ca-certificates

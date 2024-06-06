@@ -1,6 +1,10 @@
 all:
   hosts:
-    pi:
+    home_pi:
       ansible_host: 192.168.10.128
+      ansible_user: evohub
+      ansible_ssk_private_key_file: ~/.ssh/idecpi
+    lab_pi:
+      ansible_host: 10.66.4.7
       ansible_user: evohub
       ansible_ssk_private_key_file: ~/.ssh/idecpi

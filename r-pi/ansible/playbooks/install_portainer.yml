@@ -1,5 +1,5 @@
 ---
-- hosts: pi
+- hosts: all
   become: yes
   tasks:
     - name: Ensure make is installed
