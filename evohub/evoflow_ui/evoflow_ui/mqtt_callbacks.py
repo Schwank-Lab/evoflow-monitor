@@ -25,30 +25,7 @@ def update_experiment_command(
     reactor_id: int, experiment_id: int, experiment_config: json
 ):
     # first update status on db
-<<<<<<< HEAD
     update_experiment_command_on_db(experiment_id, experiment_config)
-=======
-    conn = psycopg2.connect(
-        dbname=Config.DB_NAME,
-        user=Config.DB_USER,
-        password=Config.DB_PASS,
-        host=Config.DB_HOST,
-    )
-    cursor = conn.cursor()
-    # update
-    query = f"""
-        UPDATE experiment_config SET exp_config_json = %s WHERE experiment_id = {experiment_id}
-        """
-    json_string = json.dumps(experiment_config)
-
-    print(query)
-    print(json_string)
-
-    cursor.execute(query, (json_string,))
-    conn.commit()
-    cursor.close()
-    conn.close()
->>>>>>> origin/main
 
     payload = {
         "reactor_id": reactor_id,
@@ -57,7 +34,6 @@ def update_experiment_command(
         "experiment_config": experiment_config,
     }
 
-    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
