@@ -13,7 +13,7 @@ from evoflow_db.idec import (
 def get_reactor_data():
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
-        select_stmt = select(Reactor.reactor_id, Reactor.name).orderby(Reactor.name)
+        select_stmt = select(Reactor.reactor_id, Reactor.name).order_by(Reactor.name)
 
         reactor_data = session.execute(select_stmt)
         session.commit()
