@@ -11,16 +11,16 @@ from evoflow_db.idec import (
 )
 
 
-def get_reactor_ids():
+def get_reactor_data():
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
-        select_stmt = select(Reactor.reactor_id)
+        select_stmt = select(Reactor.reactor_id, Reactor.name).orderby(Reactor.name)
 
-        reactor_ids = session.execute(select_stmt)
+        reactor_data = session.execute(select_stmt)
         session.commit()
         session.close()
 
-    return [str(id[0]) for id in reactor_ids]
+    return reactor_data
 
 
 def get_reactor_experiment_data(reactor_id):
