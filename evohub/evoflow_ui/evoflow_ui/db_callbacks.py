@@ -5,9 +5,53 @@ from regex import E
 from sqlalchemy import update, select, insert, func
 from sqlalchemy.orm import sessionmaker
 from evoflow_db.idec import (
+    Reactor,
     ExperimentConfig,
     Experiment,
 )
+
+
+def get_reactor_ids():
+    session_factory = sessionmaker(bind=idec_engine())
+    with session_factory() as session:
+        select_stmt = select(Reactor.reactor_id)
+
+        reactor_ids = session.execute(select_stmt)
+        session.commit()
+        session.close()
+
+    return [str(id[0]) for id in reactor_ids]
+
+
+def get_reactor_experiment_data(reactor_id):
+    session_factory = sessionmaker(bind=idec_engine())
+    with session_factory() as session:
+        select_stmt = select(Reactor.name, Reactor.network_id).where(
+            reactor_id=reactor_id
+        )
+
+        reactor_data = session.execute(select_stmt).fetchone()
+
+        select_stmt = (
+            select(
+                Experiment.experiment_id,
+                Experiment.name,
+                Experiment.inserted_at,
+                Experiment.status,
+            )
+            .where(status="start")
+            .where(reactor_id=reactor_id)
+        )
+
+        # Fetch experiment details
+        experiment_data = session.execute(select_stmt).fetchone()
+
+        session.commit()
+        session.close()
+
+    if reactor_data and experiment_data:
+        return reactor_data, experiment_data
+    return (None, None), (None, None)
 
 
 def update_experiment_state_on_db(reactor_id: int, experiment_id: int, command: str):

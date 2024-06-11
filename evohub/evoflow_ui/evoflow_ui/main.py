@@ -4,51 +4,13 @@ from dash import html, dcc, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import base64
 import json
-import psycopg2
 
+from evoflow_ui.db_callbacks import get_reactor_experiment_data, get_reactor_ids
 from evoflow_ui.mqtt_callbacks import (
     reactor_commands,
     save_experiment_command,
     update_experiment_command,
 )
-
-
-# Database connection function
-def get_reactor_ids():
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id FROM reactor;")
-    reactor_ids = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [str(id[0]) for id in reactor_ids]
-
-
-# Function to fetch reactor and experiment data
-def get_reactor_experiment_data(reactor_id):
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    # Fetch reactor details
-    cursor.execute(
-        "SELECT name, network_id FROM reactor WHERE reactor_id = %s;",
-        (reactor_id,),
-    )
-    reactor_data = cursor.fetchone()
-    # Fetch experiment details
-    cursor.execute(
-        "SELECT experiment_id, name, inserted_at, status FROM experiment WHERE reactor_id = %s and status = 'start';",
-        (reactor_id,),
-    )
-    experiment_data = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if reactor_data and experiment_data:
-        return reactor_data, experiment_data
-    return (None, None), (None, None)
 
 
 # Create a Dash application
