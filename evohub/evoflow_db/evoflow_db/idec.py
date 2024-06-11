@@ -46,7 +46,7 @@ class ExperimentState(Base):
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
-class ExpConfig(Base):
+class ExperimentConfig(Base):
     __tablename__ = "experiment_config"
     exp_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
@@ -75,5 +75,7 @@ class Experiment(Base):
     experiment_states: Mapped[List["ExperimentState"]] = relationship(
         back_populates="experiment"
     )
-    exp_configs: Mapped[List["ExpConfig"]] = relationship(back_populates="experiment")
+    exp_configs: Mapped[List["ExperimentConfig"]] = relationship(
+        back_populates="experiment"
+    )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
