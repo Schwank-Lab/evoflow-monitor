@@ -26,7 +26,7 @@ def get_reactor_experiment_data(reactor_id):
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
         select_stmt = select(Reactor.name, Reactor.network_id).where(
-            reactor_id=reactor_id
+            Reactor.reactor_id == reactor_id
         )
 
         reactor_data = session.execute(select_stmt).fetchone()
@@ -38,8 +38,8 @@ def get_reactor_experiment_data(reactor_id):
                 Experiment.inserted_at,
                 Experiment.status,
             )
-            .where(status="start")
-            .where(reactor_id=reactor_id)
+            .where(Experiment.status == "start")
+            .where(Experiment.reactor_id == reactor_id)
         )
 
         # Fetch experiment details
@@ -50,7 +50,7 @@ def get_reactor_experiment_data(reactor_id):
 
     if reactor_data and experiment_data:
         return reactor_data, experiment_data
-    return (None, None), (None, None)
+    return (None, None), (None, None, None, None)
 
 
 def update_experiment_state_on_db(reactor_id: int, experiment_id: int, command: str):
