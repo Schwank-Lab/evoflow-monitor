@@ -49,7 +49,7 @@ Message:
 
 ### Sending commands to the experiments
 
-Topic: `commands/experiment`
+Topic: `commands`
 
 Message:
 ```
