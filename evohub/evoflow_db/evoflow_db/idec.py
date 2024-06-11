@@ -54,7 +54,7 @@ class ExperimentConfig(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="exp_config")
+    experiment: Mapped["Experiment"] = relationship(back_populates="exp_configs")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
