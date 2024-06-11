@@ -4,45 +4,13 @@ from dash import html, dcc, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import base64
 import json
-import psycopg2
 
+from evoflow_ui.db_callbacks import get_reactor_data, get_reactor_experiment_data
 from evoflow_ui.mqtt_callbacks import (
     start_stop_pause_experiment,
     new_experiment_command,
     update_experiment_command,
 )
-
-
-# Function to fetch reactor and experiment data
-def get_reactor_experiment_data(reactor_id):
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    # Fetch reactor details
-    cursor.execute(
-        "SELECT name, network_id FROM reactor WHERE reactor_id = %s;",
-        (reactor_id,),
-    )
-    reactor_data = cursor.fetchone()
-    # Fetch experiment details
-    cursor.execute(
-        """
-        SELECT experiment_id, name, inserted_at, status 
-        FROM experiment WHERE reactor_id = %s and (status = 'start' or status = 'pause');
-        """,
-        (reactor_id,),
-    )
-    experiment_data = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if reactor_data and experiment_data:
-        return reactor_data, experiment_data
-    return (None, None), (None, None)
-
-    # Create a Dash application
-
 
 external_stylesheets = [
     dbc.themes.BOOTSTRAP,
@@ -398,17 +366,7 @@ app.layout = dbc.Container(
     Input("reactor-id-dropdown-parent", "n_clicks"),
 )
 def get_reactor_ids(n_clicks):
-    if n_clicks is None:
-        raise dash.exceptions.PreventUpdate
-
-    conn = psycopg2.connect(
-        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY name;")
-    reactor_data = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    reactor_data = get_reactor_data()
     return [{"label": name, "value": str(id)} for id, name in reactor_data]
 
 
