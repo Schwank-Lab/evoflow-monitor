@@ -56,18 +56,18 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/evohub/data/mosquitto
+      device: ../data/mosquitto
   postgres:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /home/evohub/data/postgres
+      device: ../data/postgres
   grafana:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /home/evohub/data/grafana
+      device: ../data/grafana
   pgadmin-data:
 
