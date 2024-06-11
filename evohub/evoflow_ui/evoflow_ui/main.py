@@ -7,14 +7,54 @@ import json
 
 from evoflow_ui.db_callbacks import get_reactor_experiment_data, get_reactor_ids
 from evoflow_ui.mqtt_callbacks import (
-    reactor_commands,
-    save_experiment_command,
+    start_stop_pause_experiment,
+    new_experiment_command,
     update_experiment_command,
 )
 
 
+<<<<<<< HEAD
 # Create a Dash application
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+=======
+# Function to fetch reactor and experiment data
+def get_reactor_experiment_data(reactor_id):
+    conn = psycopg2.connect(
+        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
+    )
+    cursor = conn.cursor()
+    # Fetch reactor details
+    cursor.execute(
+        "SELECT name, network_id FROM reactor WHERE reactor_id = %s;",
+        (reactor_id,),
+    )
+    reactor_data = cursor.fetchone()
+    # Fetch experiment details
+    cursor.execute(
+        """
+        SELECT experiment_id, name, inserted_at, status 
+        FROM experiment WHERE reactor_id = %s and (status = 'start' or status = 'pause');
+        """,
+        (reactor_id,),
+    )
+    experiment_data = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if reactor_data and experiment_data:
+        return reactor_data, experiment_data
+    return (None, None), (None, None)
+
+    # Create a Dash application
+
+
+external_stylesheets = [
+    dbc.themes.BOOTSTRAP,
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
+]
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+>>>>>>> origin/main
 
 # Define the layout of the app
 app.layout = dbc.Container(
@@ -23,10 +63,13 @@ app.layout = dbc.Container(
             dbc.CardBody(
                 [
                     html.H3("Select Reactor"),
-                    dcc.Dropdown(
-                        id="reactor-id-dropdown",
-                        options=[{"label": i, "value": i} for i in get_reactor_ids()],
-                        placeholder="Select a Reactor ID",
+                    html.Div(
+                        id="reactor-id-dropdown-parent",
+                        children=[
+                            dcc.Dropdown(
+                                id="reactor-id-dropdown",
+                            ),
+                        ],
                     ),
                 ]
             ),
@@ -133,18 +176,21 @@ app.layout = dbc.Container(
                                                         id="start-experiment",
                                                         color="success",
                                                         className="mt-3",
+                                                        disabled=True,
                                                     ),
                                                     dbc.Button(
                                                         "Stop",
                                                         id="stop-experiment",
                                                         color="danger",
                                                         className="mt-3",
+                                                        disabled=True,
                                                     ),
                                                     dbc.Button(
                                                         "Pause",
                                                         id="pause-experiment",
                                                         color="warning",
                                                         className="mt-3",
+                                                        disabled=True,
                                                     ),
                                                 ]
                                             ),
@@ -154,6 +200,7 @@ app.layout = dbc.Container(
                                                     id="update-experiment",
                                                     color="primary",
                                                     className="mt-3",
+                                                    disabled=True,
                                                 ),
                                             ),
                                             dbc.Col(
@@ -163,6 +210,7 @@ app.layout = dbc.Container(
                                                         id="open-new-exp-modal",
                                                         color="primary",
                                                         className="mt-3",
+                                                        disabled=True,
                                                     ),
                                                     dbc.Modal(
                                                         [
@@ -332,6 +380,7 @@ app.layout = dbc.Container(
                                         id="update-reactor",
                                         color="primary",
                                         className="mt-3",
+                                        disabled=True,
                                     ),
                                 ]
                             ),
@@ -350,6 +399,25 @@ app.layout = dbc.Container(
 
 
 @app.callback(
+    Output("reactor-id-dropdown", "options"),
+    Input("reactor-id-dropdown-parent", "n_clicks"),
+)
+def get_reactor_ids(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
+    conn = psycopg2.connect(
+        dbname="postgres", user="postgres", password="postgres", host="10.66.4.7"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT reactor_id, name FROM reactor ORDER BY name;")
+    reactor_data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [{"label": name, "value": str(id)} for id, name in reactor_data]
+
+
+@app.callback(
     Output("modal-new-exp", "is_open"),
     [Input("open-new-exp-modal", "n_clicks"), Input("save-new-exp", "n_clicks")],
     [State("modal-new-exp", "is_open")],
@@ -358,6 +426,52 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
+
+
+# This callback will monitor the content and activate the button if available
+@app.callback(
+    [
+        Output("update-experiment", "disabled"),
+        Output("upload-exp-config", "children"),
+    ],
+    Input("upload-exp-config", "contents"),
+    State("upload-exp-config", "filename"),
+)
+def enable_update_experiment_button_and_display(contents, filename):
+    if contents is not None:
+        return [
+            False,
+            html.Div(
+                [
+                    html.I(className="fas fa-file"),  # FontAwesome file icon
+                    html.Span(f" {filename}"),
+                ]
+            ),
+        ]
+    return [True, no_update]
+
+
+# This callback will monitor the content and activate the button if available
+@app.callback(
+    [
+        Output("update-reactor", "disabled"),
+        Output("upload-reactor-config", "children"),
+    ],
+    Input("upload-reactor-config", "contents"),
+    State("upload-reactor-config", "filename"),
+)
+def enable_update_reactor_button_and_display(contents, filename):
+    if contents is not None:
+        return [
+            False,
+            html.Div(
+                [
+                    html.I(className="fas fa-file"),  # FontAwesome file icon
+                    html.Span(f" {filename}"),
+                ]
+            ),
+        ]
+    return [True, no_update]
 
 
 # Callback to handle saving a new experiment
@@ -375,7 +489,7 @@ def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
         decoded = base64.b64decode(content_string)
         experiment_config = json.loads(decoded.decode("utf-8"))
 
-        save_experiment_command(
+        new_experiment_command(
             reactor_id=reactor_id,
             name=new_exp_name,
             experiment_config=experiment_config,
@@ -444,12 +558,16 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("reactor-id", "children"),
         Output("reactor-name", "children"),
         Output("network-id", "children"),
+        Output("start-experiment", "disabled"),
+        Output("pause-experiment", "disabled"),
+        Output("stop-experiment", "disabled"),
     ],
     [Input("reactor-id-dropdown", "value")],
 )
 def update_forms(reactor_id):
     if reactor_id:
         reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
+        print(reactor_id, experiment_data)
         return [
             experiment_data[0],  # experiment ID
             experiment_data[1],  # experiment Name
@@ -458,38 +576,44 @@ def update_forms(reactor_id):
             reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_data[0],  # Reactor Name
             reactor_data[1],  # Network ID
+            False,
+            False,
+            False,
         ]
     else:
-        return [no_update] * 6
+        return [no_update] * 10
 
 
 # Callback for the Start button
 @app.callback(
-    Output("experiment-status", "children", allow_duplicate=True),
+    [
+        Output("experiment-status", "children", allow_duplicate=True),
+        Output("open-new-exp-modal", "disabled", allow_duplicate=True),
+    ],
     Input("start-experiment", "n_clicks"),
     State("reactor-id", "children"),
     State("experiment-id", "children"),
     prevent_initial_call=True,
 )
 def start_experiment(n_clicks, reactor_id, experiment_id):
-    print("ciccio")
     print(f"{reactor_id}, {experiment_id}")
     if n_clicks:
         # Call the function or API to start the experiment
         # based on the experiment_id
         experiment_status = "Started"
-        print("io" + experiment_status)
-        reactor_commands(
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="start"
         )
-        print(experiment_status)
-        return experiment_status
+        return [experiment_status, True]
     return no_update
 
 
 # Callback for the Stop button
 @app.callback(
-    Output("experiment-status", "children", allow_duplicate=True),
+    [
+        Output("experiment-status", "children", allow_duplicate=True),
+        Output("open-new-exp-modal", "disabled", allow_duplicate=True),
+    ],
     Input("stop-experiment", "n_clicks"),
     State("reactor-id", "children"),
     State("experiment-id", "children"),
@@ -500,11 +624,11 @@ def stop_experiment(n_clicks, reactor_id, experiment_id):
         # Call the function or API to stop the experiment
         # based on the experiment_id
         experiment_status = "Stopped"
-        reactor_commands(
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="stop"
         )
         print(experiment_status)
-        return experiment_status
+        return [experiment_status, False]
     return no_update
 
 
@@ -520,8 +644,8 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
     if n_clicks:
         # Call the function or API to pause the experiment
         # based on the experiment_id
-        experiment_status = "Pausede"
-        reactor_commands(
+        experiment_status = "Paused"
+        start_stop_pause_experiment(
             reactor_id=reactor_id, experiment_id=experiment_id, command="pause"
         )
         print(experiment_status)
@@ -530,7 +654,12 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
 
 
 def main():
-    app.run_server(debug=True, host="0.0.0.0", port=8181, use_reloader=True)
+    app.run_server(
+        debug=True,
+        host="0.0.0.0",
+        port=8181,
+        use_reloader=True,
+    )
 
 
 # Run the app

@@ -6,7 +6,7 @@ from evoflow_ui.db_callbacks import (
 from evoflow_ui.mqtt_cmd_handler import command_centre
 
 
-def reactor_commands(reactor_id: int, experiment_id: int, command: str):
+def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: str):
     # first update status on db
     update_experiment_command_on_db(reactor_id, experiment_id, command)
 
@@ -15,6 +15,7 @@ def reactor_commands(reactor_id: int, experiment_id: int, command: str):
         "command": command,
     }
 
+    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
@@ -24,7 +25,30 @@ def update_experiment_command(
     reactor_id: int, experiment_id: int, experiment_config: json
 ):
     # first update status on db
+<<<<<<< HEAD
     update_experiment_command_on_db(experiment_id, experiment_config)
+=======
+    conn = psycopg2.connect(
+        dbname=Config.DB_NAME,
+        user=Config.DB_USER,
+        password=Config.DB_PASS,
+        host=Config.DB_HOST,
+    )
+    cursor = conn.cursor()
+    # update
+    query = f"""
+        UPDATE experiment_config SET exp_config_json = %s WHERE experiment_id = {experiment_id}
+        """
+    json_string = json.dumps(experiment_config)
+
+    print(query)
+    print(json_string)
+
+    cursor.execute(query, (json_string,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+>>>>>>> origin/main
 
     payload = {
         "reactor_id": reactor_id,
@@ -33,12 +57,13 @@ def update_experiment_command(
         "experiment_config": experiment_config,
     }
 
+    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
 
 
-def save_experiment_command(reactor_id: int, name: str, experiment_config: json):
+def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
     print(f"reactor_id {reactor_id}")
     print(f"new_exp_name {name}")
     print(f"exp_config {json.dumps(experiment_config)}")  # first update status on db
@@ -52,6 +77,7 @@ def save_experiment_command(reactor_id: int, name: str, experiment_config: json)
         "experiment_config": experiment_config,
     }
 
+    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None

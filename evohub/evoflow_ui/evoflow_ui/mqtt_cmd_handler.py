@@ -26,6 +26,9 @@ class MqttCmdCentre:
         self.client.subscribe([(t, 1) for t in self.topics])
 
     def send_cmds(self, topic, msg):
+        print(
+            f"I am the controll centre. This is the topic {topic}, this is the message {msg}"
+        )
         self.client.publish(topic, msg)
 
     def stop(self):
