@@ -1,7 +1,6 @@
 import datetime
 import json
 from evoflow_db import idec_engine
-from regex import E
 from sqlalchemy import update, select, insert, func
 from sqlalchemy.orm import sessionmaker
 from evoflow_db.idec import (
