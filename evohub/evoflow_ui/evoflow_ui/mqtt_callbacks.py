@@ -15,7 +15,6 @@ def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: st
         "command": command,
     }
 
-    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
@@ -53,7 +52,19 @@ def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
         "experiment_config": experiment_config,
     }
 
-    # command_centre().send_cmds(topic="commands/experiment", msg=json.dumps(payload))
+    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
+
+    return None
+
+
+def reset_stepper(reactor_id, command, stepper_volume=None):
+
+    payload = {
+        "reactor_id": reactor_id,
+        "command": command,
+        "stepper_vol": stepper_volume
+    }
+
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
