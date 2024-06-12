@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto:/mosquitto/config:rw
+      - mosquitto:/mosquitto/data:rw
+      - mosquitto:/mosquitto/log:rw
+    networks:
+      - evohub_net
+      
+  postgres:
+    image: postgres:latest
+    hostname: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - evohub_net
+
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    container_name: grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: veryhungryphage
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana:/var/lib/grafana
+    networks:
+      - evohub_net
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: graziano.mirata@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: veryhungryphage
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - evohub_net
+
+      
+volumes:
+  mosquitto:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/mosquitto
+  postgres:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/postgres
+  grafana:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../data/grafana
+  pgadmin-data:
+
+
+networks:
+  evohub_net:
+    driver: bridge

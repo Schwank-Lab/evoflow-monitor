@@ -1,0 +1,15 @@
+services:
+  evohub_ui:
+    image: evoflow_ui:latest
+    ports:
+      - "8282:8080"
+    networks:
+      - evhub_net 
+
+networks:
+  evhub_net:
+    driver: bridge
+
+
+
+
