@@ -1,0 +1,60 @@
+/* Custom CSS for dcc.Dropdown to make it responsive to Bootstrap themes */
+.Select-control {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+.Select-menu-outer {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.Select-option.is-focused {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-secondary-color) !important;
+}
+
+.Select-option.is-selected {
+    background-color: var(--bs-primary) !important;
+    color: #fff !important;
+}
+
+/* Custom CSS for dcc.Dropdown to make it responsive to Bootstrap themes */
+.custom-dropdown .Select-control {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+.custom-dropdown .Select-menu-outer {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.custom-dropdown .Select-option.is-focused {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-secondary-color) !important;
+}
+
+.custom-dropdown .Select-option.is-selected {
+    background-color: var(--bs-primary) !important;
+    color: #fff !important;
+}
+
+/* Custom CSS for dcc.Tabs to make it responsive to Bootstrap themes */
+.custom-tabs .tab {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+.custom-tabs .tab.selected {
+    background-color: var(--bs-primary) !important;
+    color: #fff !important;
+}
+
+.custom-tabs .tab:hover {
+    background-color: var(--bs-hover-bg) !important;
+    color: var(--bs-hover-color) !important;
+}

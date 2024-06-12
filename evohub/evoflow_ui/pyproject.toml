@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "evoflow-ui"
-version = "0.1.2"
+version = "1.0.0"
 description = ""
 authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
