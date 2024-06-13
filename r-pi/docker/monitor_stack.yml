@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  listener:
+    image: evoflow_listener:latest
+    hostname: evoflow-listener
+    container_name: evoflow-listener
+    restart: always
+    networks:
+      - monitor
+
+  ui:
+    image: evolflow_ui:latest
+    hostname: evoflow-ui
+    container_name: evoflow-ui
+    restart: always
+    ports:
+      - "8282:8080"
+    networks:
+      - monitor
+
+networks:
+  monitor:
+    name: evohub_net
+    external: true

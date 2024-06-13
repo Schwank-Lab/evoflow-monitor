@@ -22,9 +22,9 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: evohub
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: veryhungryphage
     volumes:
       - postgres:/var/lib/postgresql/data
     ports:
@@ -42,47 +42,18 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: veryhungryphage
     ports:
       - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: veryhungryphage
     volumes:
       - grafana:/var/lib/grafana
     networks:
       - evohub_net
       
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin4_container
-    restart: always
-    ports:
-      - "8888:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: graziano.mirata@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: veryhungryphage
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    networks:
-      - evohub_net
-
-      
 volumes:
   mosquitto:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../data/mosquitto
   postgres:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../data/postgres
   grafana:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../data/grafana
-  pgadmin-data:
-
 
 networks:
   evohub_net:
