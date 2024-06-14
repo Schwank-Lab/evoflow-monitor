@@ -1,10 +1,19 @@
 all:
   hosts:
     home_pi:
+      inventory_hostname: home_pi
       ansible_host: 192.168.10.128
       ansible_user: evohub
       ansible_ssk_private_key_file: ~/.ssh/idecpi
     lab_pi:
+      inventory_hostname: lab_pi
       ansible_host: 10.66.4.7
       ansible_user: evohub
       ansible_ssk_private_key_file: ~/.ssh/idecpi
+    home_test:
+      inventory_hostname: home_test
+      ansible_connection: ssh
+      ansible_host: 192.168.10.10
+      ansible_user: root
+      ansible_password: ciccio
+      ansible_ssh_pass: ciccio

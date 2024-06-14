@@ -1,0 +1,5 @@
+---
+# defaults file for roles/build_evohub_images
+base_dockerfile_path: "/home/{{ ansible_user }}/Workspace/evoflow-monitor/evohub/Docker"
+ui_dockerfile_path: "/home/{{ ansible_user }}/Workspace/evoflow-monitor/evohub/evoflow_ui" 
+listener_dockerfile_path: "/home/{{ ansible_user }}/Workspace/evoflow-monitor/evohub/evoflow_listener"

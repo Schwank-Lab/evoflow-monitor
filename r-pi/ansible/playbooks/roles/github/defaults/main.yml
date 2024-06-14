@@ -1,0 +1,8 @@
+---
+# defaults file for roles/github
+ssh_public_key_path: "{{ lookup('env', 'HOME') }}/.ssh/idec_github.pub"
+ssh_private_key_path: "{{ lookup('env', 'HOME') }}/.ssh/idec_github"
+ssh_config_content: |
+      Host *.github.com
+        AddKeysToAgent yes
+        IdentityFile /home/{{ ansible_user }}/.ssh/idec_github

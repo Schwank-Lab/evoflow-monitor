@@ -1,0 +1,8 @@
+---
+- name: Test build images
+  hosts: home_lab
+  become: yes
+  roles:
+    - build_evohub_images
+
+

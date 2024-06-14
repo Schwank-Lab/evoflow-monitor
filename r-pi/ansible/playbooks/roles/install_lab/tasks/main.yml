@@ -1,0 +1,21 @@
+---
+# tasks file for roles/install_lab
+- name: Install Deps
+  include_role:
+    name: apt
+
+- name: Install Docker
+  include_role:
+    name: docker
+
+- name: Set up Github
+  include_role:
+    name: github
+
+- name: Clone Lab
+  include_role:
+    name: clone
+
+- name: Install Portainer
+  include_role:
+    name: portainer

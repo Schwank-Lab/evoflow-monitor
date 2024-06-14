@@ -1,0 +1,7 @@
+---
+# defaults file for roles/clone
+workspace_path: "/home/{{ ansible_user}}/Workspace"
+repo: "git@github.com:Schwank-Lab/evoflow-monitor.git"
+destination: "/home/{{ ansible_user }}/Workspace/evoflow-monitor"
+key_file: "/home/{{ ansible_user }}/.ssh/idec_github"
+version: "main"

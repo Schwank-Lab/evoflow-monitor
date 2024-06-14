@@ -1,0 +1,24 @@
+---
+# tasks file for roles/clone
+- name: Ensure git is installed
+  package:
+    name: git
+    state: present
+
+- name: Create Workspace
+  file:
+    path: "{{ workspace_path }}"
+    state: directory        
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Clone GitHub repository
+  become_user: "{{ ansible_user }}"
+  git:
+    repo: "{{ repo }}"
+    dest: "{{ destination }}"
+    version: "{{ version }}"
+    update: yes
+    accept_hostkey: yes
+    key_file: "{{ key_file }}"

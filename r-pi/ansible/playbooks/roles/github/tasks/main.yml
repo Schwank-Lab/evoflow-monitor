@@ -1,0 +1,53 @@
+---
+# tasks file for roles/github
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: /home/{{ ansible_user }}/.ssh
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0700'
+
+- name: Copy SSH public key to remote server
+  ansible.builtin.copy:
+    src: "{{ ssh_public_key_path }}"
+    dest: /home/{{ ansible_user }}/.ssh/idec_github.pub
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Copy SSH private key to remote server
+  ansible.builtin.copy:
+    src: "{{ ssh_private_key_path }}"
+    dest: /home/{{ ansible_user }}/.ssh/idec_github
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Create SSH config file
+  ansible.builtin.copy:
+    content: "{{ ssh_config_content }}"
+    dest: /home/{{ ansible_user }}/.ssh/config
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Start ssh-agent and add key
+  shell: |
+    eval "$(ssh-agent)"
+    ssh-add /home/{{ ansible_user }}/.ssh/idec_github
+    
+- name: Ensure ssh-agent starts at boot
+  lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: "{{ item }}"
+  loop:
+    - "eval $(ssh-agent -s)"
+    - "ssh-add /home/{{ ansible_user }}/.ssh/idec_github"
+
+- name: Add GitHub to known_hosts
+  known_hosts:
+    name: github.com
+    key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
+    path: /home/{{ ansible_user }}/.ssh/known_hosts
+    state: present

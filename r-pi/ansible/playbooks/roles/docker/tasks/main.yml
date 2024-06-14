@@ -1,0 +1,33 @@
+---
+# tasks file for roles/docker
+- name: Install Docker deps
+  apt:
+    name: "{{ docker_deps }}"
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Start Docker Service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Set permission to Docker socket
+  file: 
+    path: /var/run/docker.sock
+    mode: 666    
+
+- name: Add Docker group
+  group:
+    name: docker
+    state: present
+
+- name: Add user to Docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true

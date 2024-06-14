@@ -1,0 +1,6 @@
+---
+- name: Install Home Lab Pi
+  hosts: home_pi
+  become: yes
+  roles:
+    - install_lab

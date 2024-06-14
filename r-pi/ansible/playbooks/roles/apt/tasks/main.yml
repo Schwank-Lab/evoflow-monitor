@@ -1,0 +1,19 @@
+---
+# tasks file for roles/requisites
+- name: Update apt package index
+  apt:
+    update_cache: yes
+    upgrade: dist
+  tags:
+    - update_apt
+    - install_system_deps
+    - install_docker
+
+- name: Install System deps
+  apt:
+    name: "{{ to_install }}"
+    state: present
+  tags:
+    - install_system_deps
+    - install_docker
+

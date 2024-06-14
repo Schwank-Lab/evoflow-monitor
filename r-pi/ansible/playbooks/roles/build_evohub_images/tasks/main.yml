@@ -1,0 +1,25 @@
+---
+# tasks file for roles/build_evohub_images
+- name: Build Evohub Base Image
+  community.docker.docker_image:
+    build:
+      path: "{{ base_image_path }}"
+      args:
+        ssh_private_key: 
+    name: idec_base
+
+- name: Build Evohub Listener
+  community.docker.docker_image:
+    build:
+      path: "{{ listener_image_path }}"
+      cache_from:
+        - idec_base:latest
+    name: evoflow_listener
+
+- name: Build Evohub UI
+  community.docker.docker_image:
+    build:
+      path: "{{ ui_image_path }}"
+      cache_from:
+        - idec_base:latest
+    name: evoflow_ui

@@ -1,0 +1,26 @@
+---
+# defaults file for roles/portainer
+configure_settings: false
+configure_registry: false
+remove_persistent_data: false
+remove_existing_container: false
+persistent_data_path: /opt/portainer:/data
+container_image: portainer/portainer:{{ version }}
+container_name: portainer 
+container_labels: {}
+container_network:
+container_restart_policy: always
+container_recreate: false
+auth_method: 1
+
+# Portainer Version
+version: latest
+
+# Networking
+host_port: 9443
+container_ports:
+  - "9443:9443"
+
+# Admin User
+admin_user: admin
+admin_password: password
