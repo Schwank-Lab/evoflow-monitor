@@ -2,13 +2,14 @@ import json
 from evoflow_ui.db_callbacks import (
     save_experiment_command_on_db,
     update_experiment_command_on_db,
+    update_experiment_state_on_db
 )
 from evoflow_ui.mqtt_cmd_handler import command_centre
 
 
 def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: str):
     # first update status on db
-    update_experiment_command_on_db(reactor_id, experiment_id, command)
+    update_experiment_state_on_db(reactor_id, experiment_id, command)
 
     payload = {
         "reactor_id": reactor_id,
