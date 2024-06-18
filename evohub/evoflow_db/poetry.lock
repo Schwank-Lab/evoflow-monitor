@@ -16,7 +16,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "8641603d88e06b7ea7838980764938777333f0e6"
+resolved_reference = "21a3464f96495323c076058b6c1fc8b5c9475f46"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]
