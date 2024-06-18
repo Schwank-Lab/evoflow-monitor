@@ -2,7 +2,7 @@ import json
 from evoflow_ui.db_callbacks import (
     save_experiment_command_on_db,
     update_experiment_command_on_db,
-    update_experiment_state_on_db
+    update_experiment_state_on_db,
 )
 from evoflow_ui.mqtt_cmd_handler import command_centre
 
@@ -59,13 +59,18 @@ def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
 
 
 def reset_stepper(reactor_id, command, stepper_volume=None):
-
     payload = {
         "reactor_id": reactor_id,
         "command": command,
-        "stepper_vol": stepper_volume
+        "stepper_vol": stepper_volume,
     }
 
     command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
 
     return None
+
+
+# def print_mqtt_messages():
+#     cc = command_centre()
+
+#     return .get_messages_from_queue()

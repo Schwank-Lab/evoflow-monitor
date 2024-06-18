@@ -8,6 +8,7 @@ import json
 
 from evoflow_ui.db_callbacks import get_reactor_data, get_reactor_experiment_data
 from evoflow_ui.mqtt_callbacks import (
+    print_mqtt_messages,
     reset_stepper,
     start_stop_pause_experiment,
     new_experiment_command,
@@ -24,6 +25,11 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 # Define the layout of the app
 app.layout = dbc.Container(
     [
+        dcc.Interval(
+            id="interval-component",
+            interval=5 * 1000,  # Update every 5 seconds
+            n_intervals=0,
+        ),
         dbc.Row(
             [
                 dbc.Col(
@@ -61,221 +67,274 @@ app.layout = dbc.Container(
                                                         children=[
                                                             dbc.Form(
                                                                 [
+                                                                    html.Div(
+                                                                        html.P(),
+                                                                        style={
+                                                                            "marginBottom": 10
+                                                                        },
+                                                                    ),
                                                                     html.H3(
                                                                         "Experiment Setup"
                                                                     ),
                                                                     dbc.Row(
-                                                                        [
-                                                                            dbc.Label(
-                                                                                "Experiment ID",
-                                                                                className="col-form-label col-sm-4",
-                                                                            ),
-                                                                            dbc.Label(
-                                                                                id="experiment-id",
-                                                                                className="col-sm-8",
-                                                                            ),
-                                                                        ],
-                                                                        className="mb-3",
-                                                                    ),
-                                                                    dbc.Row(
-                                                                        [
-                                                                            dbc.Label(
-                                                                                "Experiment Name",
-                                                                                className="col-form-label col-sm-4",
-                                                                            ),
-                                                                            dbc.Label(
-                                                                                id="experiment-name",
-                                                                                className="col-sm-8",
-                                                                            ),
-                                                                        ],
-                                                                        className="mb-3",
-                                                                    ),
-                                                                    dbc.Row(
-                                                                        [
-                                                                            dbc.Label(
-                                                                                "Date and Time",
-                                                                                className="col-form-label col-sm-4",
-                                                                            ),
-                                                                            dbc.Label(
-                                                                                id="experiment-datetime",
-                                                                                className="col-sm-8",
-                                                                            ),
-                                                                        ],
-                                                                        className="mb-3",
-                                                                    ),
-                                                                    dbc.Row(
-                                                                        [
-                                                                            dbc.Label(
-                                                                                "Status",
-                                                                                className="col-form-label col-sm-4",
-                                                                            ),
-                                                                            dbc.Label(
-                                                                                id="experiment-status",
-                                                                                className="col-sm-8",
-                                                                            ),
-                                                                        ],
-                                                                        className="mb-3",
-                                                                    ),
-                                                                    dbc.Row(
-                                                                        [
-                                                                            dbc.Label(
-                                                                                "Experiment Configuration",
-                                                                                className="col-form-label col-sm-4",
-                                                                            ),
-                                                                            dbc.Col(
-                                                                                dcc.Upload(
-                                                                                    id="upload-exp-config",
-                                                                                    children=html.Div(
+                                                                        dbc.Card(
+                                                                            dbc.CardBody(
+                                                                                [
+                                                                                    dbc.Row(
                                                                                         [
-                                                                                            "Drag and Drop or ",
-                                                                                            html.A(
-                                                                                                "Select a File"
+                                                                                            dbc.Label(
+                                                                                                "Experiment ID",
+                                                                                                className="col-form-label col-sm-4",
+                                                                                            ),
+                                                                                            dbc.Label(
+                                                                                                id="experiment-id",
+                                                                                                className="col-sm-8",
+                                                                                            ),
+                                                                                        ],
+                                                                                        className="mb-3",
+                                                                                    ),
+                                                                                    dbc.Row(
+                                                                                        [
+                                                                                            dbc.Label(
+                                                                                                "Experiment Name",
+                                                                                                className="col-form-label col-sm-4",
+                                                                                            ),
+                                                                                            dbc.Label(
+                                                                                                id="experiment-name",
+                                                                                                className="col-sm-8",
+                                                                                            ),
+                                                                                        ],
+                                                                                        className="mb-3",
+                                                                                    ),
+                                                                                    dbc.Row(
+                                                                                        [
+                                                                                            dbc.Label(
+                                                                                                "Date and Time",
+                                                                                                className="col-form-label col-sm-4",
+                                                                                            ),
+                                                                                            dbc.Label(
+                                                                                                id="experiment-datetime",
+                                                                                                className="col-sm-8",
+                                                                                            ),
+                                                                                        ],
+                                                                                        className="mb-3",
+                                                                                    ),
+                                                                                    dbc.Row(
+                                                                                        [
+                                                                                            dbc.Label(
+                                                                                                "Status",
+                                                                                                className="col-form-label col-sm-4",
+                                                                                            ),
+                                                                                            dbc.Label(
+                                                                                                id="experiment-status",
+                                                                                                className="col-sm-8",
+                                                                                            ),
+                                                                                        ],
+                                                                                        className="mb-3",
+                                                                                    ),
+                                                                                    dbc.Row(
+                                                                                        [
+                                                                                            dbc.Label(
+                                                                                                "Experiment Configuration",
+                                                                                                className="col-form-label col-sm-4",
+                                                                                            ),
+                                                                                            dbc.Col(
+                                                                                                dcc.Upload(
+                                                                                                    id="upload-exp-config",
+                                                                                                    children=html.Div(
+                                                                                                        [
+                                                                                                            "Drag and Drop or ",
+                                                                                                            html.A(
+                                                                                                                "Select a File"
+                                                                                                            ),
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                    style={
+                                                                                                        "width": "100%",
+                                                                                                        "height": "60px",
+                                                                                                        "lineHeight": "60px",
+                                                                                                        "borderWidth": "1px",
+                                                                                                        "borderStyle": "dashed",
+                                                                                                        "borderRadius": "5px",
+                                                                                                        "textAlign": "center",
+                                                                                                        "margin": "10px",
+                                                                                                    },
+                                                                                                    multiple=False,
+                                                                                                    accept=".json",
+                                                                                                ),
+                                                                                                width=8,
+                                                                                            ),
+                                                                                        ],
+                                                                                        className="mb-3",
+                                                                                    ),
+                                                                                    dbc.Row(
+                                                                                        [
+                                                                                            dbc.Col(
+                                                                                                [
+                                                                                                    dbc.Button(
+                                                                                                        "Start",
+                                                                                                        id="start-experiment",
+                                                                                                        color="success",
+                                                                                                        className="mt-3",
+                                                                                                        disabled=True,
+                                                                                                    ),
+                                                                                                    dbc.Button(
+                                                                                                        "Stop",
+                                                                                                        id="stop-experiment",
+                                                                                                        color="danger",
+                                                                                                        className="mt-3",
+                                                                                                        disabled=True,
+                                                                                                    ),
+                                                                                                    dbc.Button(
+                                                                                                        "Pause",
+                                                                                                        id="pause-experiment",
+                                                                                                        color="warning",
+                                                                                                        className="mt-3",
+                                                                                                        disabled=True,
+                                                                                                    ),
+                                                                                                ]
+                                                                                            ),
+                                                                                            dbc.Col(
+                                                                                                dbc.Button(
+                                                                                                    "Update Experiment",
+                                                                                                    id="update-experiment",
+                                                                                                    color="primary",
+                                                                                                    className="mt-3",
+                                                                                                    disabled=True,
+                                                                                                ),
+                                                                                            ),
+                                                                                            dbc.Col(
+                                                                                                [
+                                                                                                    dbc.Button(
+                                                                                                        "New Experiment",
+                                                                                                        id="open-new-exp-modal",
+                                                                                                        color="primary",
+                                                                                                        className="mt-3",
+                                                                                                        disabled=True,
+                                                                                                    ),
+                                                                                                    dbc.Modal(
+                                                                                                        [
+                                                                                                            dbc.ModalHeader(
+                                                                                                                dbc.ModalTitle(
+                                                                                                                    "Create New Experiment"
+                                                                                                                )
+                                                                                                            ),
+                                                                                                            dbc.ModalBody(
+                                                                                                                dbc.Form(
+                                                                                                                    [
+                                                                                                                        dbc.Row(
+                                                                                                                            [
+                                                                                                                                dbc.Label(
+                                                                                                                                    "Experiment Name",
+                                                                                                                                    className="col-form-label col-sm-4",
+                                                                                                                                ),
+                                                                                                                                dbc.Col(
+                                                                                                                                    dbc.Input(
+                                                                                                                                        type="text",
+                                                                                                                                        id="new-exp-name",
+                                                                                                                                        placeholder="Enter experiment name",
+                                                                                                                                    ),
+                                                                                                                                    width=8,
+                                                                                                                                ),
+                                                                                                                            ],
+                                                                                                                            className="mb-3",
+                                                                                                                        ),
+                                                                                                                        dbc.Row(
+                                                                                                                            [
+                                                                                                                                dbc.Label(
+                                                                                                                                    "Experiment Configuration",
+                                                                                                                                    className="col-form-label col-sm-4",
+                                                                                                                                ),
+                                                                                                                                dbc.Col(
+                                                                                                                                    dcc.Upload(
+                                                                                                                                        id="upload-new-exp-config",
+                                                                                                                                        children=html.Div(
+                                                                                                                                            [
+                                                                                                                                                "Drag and Drop or ",
+                                                                                                                                                html.A(
+                                                                                                                                                    "Select a File"
+                                                                                                                                                ),
+                                                                                                                                            ]
+                                                                                                                                        ),
+                                                                                                                                        style={
+                                                                                                                                            "width": "100%",
+                                                                                                                                            "height": "60px",
+                                                                                                                                            "lineHeight": "60px",
+                                                                                                                                            "borderWidth": "1px",
+                                                                                                                                            "borderStyle": "dashed",
+                                                                                                                                            "borderRadius": "5px",
+                                                                                                                                            "textAlign": "center",
+                                                                                                                                            "margin": "10px",
+                                                                                                                                        },
+                                                                                                                                        multiple=False,
+                                                                                                                                        accept=".json",
+                                                                                                                                    ),
+                                                                                                                                    width=8,
+                                                                                                                                ),
+                                                                                                                            ],
+                                                                                                                            className="mb-3",
+                                                                                                                        ),
+                                                                                                                    ],
+                                                                                                                ),
+                                                                                                            ),
+                                                                                                            dbc.ModalFooter(
+                                                                                                                dbc.Button(
+                                                                                                                    "Save Experiment",
+                                                                                                                    id="save-new-exp",
+                                                                                                                    color="primary",
+                                                                                                                    n_clicks=0,
+                                                                                                                ),
+                                                                                                            ),
+                                                                                                        ],
+                                                                                                        id="modal-new-exp",
+                                                                                                        is_open=False,
+                                                                                                    ),
+                                                                                                ]
                                                                                             ),
                                                                                         ]
                                                                                     ),
-                                                                                    style={
-                                                                                        "width": "100%",
-                                                                                        "height": "60px",
-                                                                                        "lineHeight": "60px",
-                                                                                        "borderWidth": "1px",
-                                                                                        "borderStyle": "dashed",
-                                                                                        "borderRadius": "5px",
-                                                                                        "textAlign": "center",
-                                                                                        "margin": "10px",
-                                                                                    },
-                                                                                    multiple=False,
-                                                                                    accept=".json",
-                                                                                ),
-                                                                                width=8,
+                                                                                ],
                                                                             ),
-                                                                        ],
-                                                                        className="mb-3",
+                                                                        ),
                                                                     ),
                                                                     dbc.Row(
-                                                                        [
-                                                                            dbc.Col(
-                                                                                [
-                                                                                    dbc.Button(
-                                                                                        "Start",
-                                                                                        id="start-experiment",
-                                                                                        color="success",
-                                                                                        className="mt-3",
-                                                                                        disabled=True,
-                                                                                    ),
-                                                                                    dbc.Button(
-                                                                                        "Stop",
-                                                                                        id="stop-experiment",
-                                                                                        color="danger",
-                                                                                        className="mt-3",
-                                                                                        disabled=True,
-                                                                                    ),
-                                                                                    dbc.Button(
-                                                                                        "Pause",
-                                                                                        id="pause-experiment",
-                                                                                        color="warning",
-                                                                                        className="mt-3",
-                                                                                        disabled=True,
-                                                                                    ),
-                                                                                ]
+                                                                        id="log-row",
+                                                                        style={
+                                                                            "display": "none"
+                                                                        },
+                                                                        children=[
+                                                                            html.Div(
+                                                                                html.P(),
+                                                                                style={
+                                                                                    "marginBottom": 20
+                                                                                },
                                                                             ),
-                                                                            dbc.Col(
-                                                                                dbc.Button(
-                                                                                    "Update Experiment",
-                                                                                    id="update-experiment",
-                                                                                    color="primary",
-                                                                                    className="mt-3",
-                                                                                    disabled=True,
-                                                                                ),
+                                                                            html.H3(
+                                                                                "Experiment Status ",
                                                                             ),
-                                                                            dbc.Col(
-                                                                                [
-                                                                                    dbc.Button(
-                                                                                        "New Experiment",
-                                                                                        id="open-new-exp-modal",
-                                                                                        color="primary",
-                                                                                        className="mt-3",
-                                                                                        disabled=True,
-                                                                                    ),
-                                                                                    dbc.Modal(
-                                                                                        [
-                                                                                            dbc.ModalHeader(
-                                                                                                dbc.ModalTitle(
-                                                                                                    "Create New Experiment"
-                                                                                                )
-                                                                                            ),
-                                                                                            dbc.ModalBody(
-                                                                                                dbc.Form(
-                                                                                                    [
-                                                                                                        dbc.Row(
-                                                                                                            [
-                                                                                                                dbc.Label(
-                                                                                                                    "Experiment Name",
-                                                                                                                    className="col-form-label col-sm-4",
-                                                                                                                ),
-                                                                                                                dbc.Col(
-                                                                                                                    dbc.Input(
-                                                                                                                        type="text",
-                                                                                                                        id="new-exp-name",
-                                                                                                                        placeholder="Enter experiment name",
-                                                                                                                    ),
-                                                                                                                    width=8,
-                                                                                                                ),
-                                                                                                            ],
-                                                                                                            className="mb-3",
-                                                                                                        ),
-                                                                                                        dbc.Row(
-                                                                                                            [
-                                                                                                                dbc.Label(
-                                                                                                                    "Experiment Configuration",
-                                                                                                                    className="col-form-label col-sm-4",
-                                                                                                                ),
-                                                                                                                dbc.Col(
-                                                                                                                    dcc.Upload(
-                                                                                                                        id="upload-new-exp-config",
-                                                                                                                        children=html.Div(
-                                                                                                                            [
-                                                                                                                                "Drag and Drop or ",
-                                                                                                                                html.A(
-                                                                                                                                    "Select a File"
-                                                                                                                                ),
-                                                                                                                            ]
-                                                                                                                        ),
-                                                                                                                        style={
-                                                                                                                            "width": "100%",
-                                                                                                                            "height": "60px",
-                                                                                                                            "lineHeight": "60px",
-                                                                                                                            "borderWidth": "1px",
-                                                                                                                            "borderStyle": "dashed",
-                                                                                                                            "borderRadius": "5px",
-                                                                                                                            "textAlign": "center",
-                                                                                                                            "margin": "10px",
-                                                                                                                        },
-                                                                                                                        multiple=False,
-                                                                                                                        accept=".json",
-                                                                                                                    ),
-                                                                                                                    width=8,
-                                                                                                                ),
-                                                                                                            ],
-                                                                                                            className="mb-3",
-                                                                                                        ),
-                                                                                                    ],
+                                                                            dbc.Card(
+                                                                                dbc.CardBody(
+                                                                                    [
+                                                                                        html.Div(
+                                                                                            [
+                                                                                                dcc.Textarea(
+                                                                                                    id="textarea-mqtt-status",
+                                                                                                    value="",
+                                                                                                    className="custom-textarea",
+                                                                                                    readOnly=True,
                                                                                                 ),
-                                                                                            ),
-                                                                                            dbc.ModalFooter(
-                                                                                                dbc.Button(
-                                                                                                    "Save Experiment",
-                                                                                                    id="save-new-exp",
-                                                                                                    color="primary",
-                                                                                                    n_clicks=0,
+                                                                                                html.Div(
+                                                                                                    id="textarea-state-example-output",
+                                                                                                    style={
+                                                                                                        "whiteSpace": "pre-line"
+                                                                                                    },
                                                                                                 ),
-                                                                                            ),
-                                                                                        ],
-                                                                                        id="modal-new-exp",
-                                                                                        is_open=False,
-                                                                                    ),
-                                                                                ]
+                                                                                            ]
+                                                                                        )
+                                                                                    ],
+                                                                                )
                                                                             ),
-                                                                        ]
+                                                                        ],
                                                                     ),
                                                                     html.Div(
                                                                         id="output-exp-config"
@@ -516,6 +575,43 @@ app.layout = dbc.Container(
     fluid=True,
     className="py-4",
 )
+
+
+@app.callback(
+    [Output("textarea-mqtt-status", "value")],
+    [Input("interval-component", "n_intervals")],
+)
+def print_mqtt_to_log_window(n_intevarls):
+    # return print_mqtt_messages()
+    n_intevarls += 1
+    return [
+        f"""
+            ciccio_{n_intevarls}
+        """
+    ]
+
+
+@app.callback(
+    [Output("log-row", "style")],
+    [Input("reactor-id-dropdown", "value")],
+    [
+        State("log-row", "style"),
+    ],
+    prevent_initial_call=True,
+)
+def show_experiment_staus(reactor_id, style):
+    print(f"show_experiment: {reactor_id}")
+    print(f"style: {style}")
+    if reactor_id is None:
+        raise PreventUpdate
+
+    if reactor_id and style and style.get("display") == "none":
+        return [{"display": "block"}]
+
+    if reactor_id and style and style.get("display") == "block":
+        return [{"display": "block"}]
+
+    return [{"display": "none"}]
 
 
 @app.callback(

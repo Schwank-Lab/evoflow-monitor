@@ -58,3 +58,25 @@
     background-color: var(--bs-hover-bg) !important;
     color: var(--bs-hover-color) !important;
 }
+
+.custom-textarea .tab {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+.custom-textarea {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    /* border: 1px solid #ccc; */
+    border-radius: 5px;
+    background-color: var(--bs-body-bg) !important;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    color: #ccc;
+    resize: none;
+    /* Disable resizing */
+    /* box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); */
+    overflow-y: scroll;
+}
