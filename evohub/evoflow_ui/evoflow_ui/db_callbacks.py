@@ -22,15 +22,21 @@ def get_reactor_data():
     return reactor_data
 
 
-def get_reactor_experiment_data(reactor_id):
+def pull_reactor_data(reactor_id):
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
         select_stmt = select(Reactor.name, Reactor.network_id).where(
             Reactor.reactor_id == reactor_id
         )
-
         reactor_data = session.execute(select_stmt).fetchone()
+        session.close()
 
+    return reactor_data
+
+
+def pull_experiment_data(reactor_id):
+    session_factory = sessionmaker(bind=idec_engine())
+    with session_factory() as session:
         select_stmt = (
             select(
                 Experiment.experiment_id,
@@ -41,12 +47,15 @@ def get_reactor_experiment_data(reactor_id):
             .where(Experiment.status == "start")
             .where(Experiment.reactor_id == reactor_id)
         )
-
-        # Fetch experiment details
-        experiment_data = session.execute(select_stmt).fetchone()
-
-        session.commit()
+        exp_data = session.execute(select_stmt).fetchone()
         session.close()
+
+    return exp_data
+
+
+def get_reactor_experiment_data(reactor_id):
+    reactor_data = pull_reactor_data(reactor_id)
+    experiment_data = pull_experiment_data(reactor_id)
 
     if reactor_data and experiment_data:
         return reactor_data, experiment_data
