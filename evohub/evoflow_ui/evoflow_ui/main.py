@@ -528,16 +528,6 @@ app.layout = dbc.Container(
     prevent_initial_call=True,
 )
 def create_iframe_url(reactor_id, reactor_name, experiment_name):
-    # reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
-    # reactor_name, experiment_name = reactor_data[0], experiment_data[0]
-    print(
-        f"""
-        create_iframe_url: 
-            reactor_id passed {reactor_id}, 
-            reactor_name passed {reactor_name}, 
-            experiment_name passed {experiment_name}
-        """
-    )
     if reactor_name and experiment_name:
         return [
             f"""
@@ -577,10 +567,11 @@ def toggle_modal(n1, n2, is_open):
 @app.callback(
     [
         Output("update-experiment", "disabled"),
-        Output("upload-exp-config", "children"),
+        Output("upload-exp-config", "children", allow_duplicate=True),
     ],
     Input("upload-exp-config", "contents"),
     State("upload-exp-config", "filename"),
+    prevent_initial_call="initial_duplicate",
 )
 def enable_update_experiment_button_and_display(contents, filename):
     if contents is not None:
@@ -596,27 +587,20 @@ def enable_update_experiment_button_and_display(contents, filename):
     return [True, no_update]
 
 
-# This callback will monitor the content and activate the button if available
 @app.callback(
     [
-        Output("update-reactor", "disabled"),
-        Output("upload-reactor-config", "children"),
+        Output("open-new-exp-modal", "disabled"),
     ],
-    Input("upload-reactor-config", "contents"),
-    State("upload-reactor-config", "filename"),
+    [Input("reactor-id-dropdown", "value")],
+    [
+        State("experiment-status", "children"),
+    ],
+    prevent_initial_call="initial_duplicate",
 )
-def enable_update_reactor_button_and_display(contents, filename):
-    if contents is not None:
-        return [
-            False,
-            html.Div(
-                [
-                    html.I(className="fas fa-file"),  # FontAwesome file icon
-                    html.Span(f" {filename}"),
-                ]
-            ),
-        ]
-    return [True, no_update]
+def enbale_new_experiment(reactor_id, experiment_status):
+    if reactor_id and (experiment_status == "stop" or experiment_status is None):
+        return [False]
+    return [True]
 
 
 # Callback to handle saving a new experiment
