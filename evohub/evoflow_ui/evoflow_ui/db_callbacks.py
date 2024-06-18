@@ -1,7 +1,8 @@
+import time
 import datetime
 import json
 from evoflow_db import idec_engine
-from sqlalchemy import update, select, insert, func
+from sqlalchemy import update, select, func
 from sqlalchemy.orm import sessionmaker
 from evoflow_db.idec import (
     Reactor,
@@ -93,42 +94,26 @@ def update_experiment_command_on_db(experiment_id: int, experiment_config: json)
 def save_experiment_command_on_db(reactor_id: int, name: str, experiment_config: json):
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
-        select_stmt = select(func.max(Experiment.experiment_id).label("exp_id")).where(
-            Experiment.reactor_id == reactor_id
+        exp = Experiment(
+            reactor_id=reactor_id,
+            name=name,
+            timestamp=int(time.time()),
+            status="stop",
         )
-        experiment_id = session.execute(select_stmt).first()
-
-        insert_stmt = insert(Experiment).values(
-            {
-                "experiment_id": experiment_id + 1,
-                "reactor_id": reactor_id,
-                "name": name,
-                "timestamp": int(datetime.date.now()),
-                "inserted_at": datetime.date.now(),
-                "status": "stop",
-            }
-        )
-        session.execute(insert_stmt)
+        session.add(exp)
         session.commit()
 
         json_string = json.dumps(experiment_config)
-        select_stmt = select(
-            func.max(ExperimentConfig.exp_config_id).label("exp_config_id")
-        ).where(Experiment.reactor_id == reactor_id)
-        exp_config_id = session.execute(select_stmt).first()
 
-        insert_stmt = insert(ExperimentConfig).values(
-            {
-                "exp_config_id": exp_config_id + 1,
-                "experiment_id": experiment_id,
-                "exp_config_json": json_string,
-                "timestamp": int(datetime.date.now()),
-                "inserted_at": datetime.date.now(),
-            }
+        exp_conf = ExperimentConfig(
+            experiment_id=exp.experiment_id,
+            exp_config_json=json_string,
+            timestamp=int(datetime.date.now()),
+            inserted_at=datetime.date.now(),
         )
-        session.execute(insert_stmt)
+        session.add(exp_conf)
         session.commit()
 
         session.close()
 
-    return experiment_id
+    return exp.experiment_id

@@ -19,12 +19,12 @@ class Reactor(Base):
 class ReactorConfig(Base):
     __tablename__ = "reactor_config"
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
+    reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     reactor_config_json: Mapped[dict[str, Any]] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="reactor_configs")
+    reactor: Mapped["Reactor"] = relationship(back_populates="reactor_configs")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
@@ -69,9 +69,9 @@ class Experiment(Base):
     # Many-to-One relationship with Reactor
     reactor: Mapped["Reactor"] = relationship(back_populates="experiments")
     # One-to-Many relationships with ReactorConfig, ReactorState, and ExpConfig
-    reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
-        back_populates="experiment"
-    )
+    # reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
+    #     back_populates="experiment"
+    # )
     experiment_states: Mapped[List["ExperimentState"]] = relationship(
         back_populates="experiment"
     )
