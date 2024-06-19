@@ -1,7 +1,6 @@
 # Import necessary libraries
-from pydoc import classname
 import dash
-from dash import html, dcc, Input, Output, State, no_update, ctx
+from dash import html, dcc, Input, Output, State, no_update
 import dash_bootstrap_components as dbc
 import base64
 import json
@@ -610,9 +609,10 @@ def enbale_new_experiment(reactor_id, experiment_status):
     State("new-exp-name", "value"),
     State("upload-new-exp-config", "contents"),
     State("reactor-id", "children"),
+    State("modal-new-exp", "is_open"),
     prevent_initial_call=True,
 )
-def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
+def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id, is_open):
     if n_clicks and new_exp_name and contents and reactor_id:
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
@@ -625,9 +625,9 @@ def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
         )
 
         # Update the UI with the new experiment data
-        return not ctx.states["modal-new-exp.is_open"]
+        return not is_open
 
-    return no_update
+    return is_open
 
 
 # Callback to handle the upload and update of the experiment configuration file

@@ -231,7 +231,7 @@ files = [
 
 [[package]]
 name = "evoflow-db"
-version = "0.1.9"
+version = "0.1.10"
 description = ""
 optional = false
 python-versions = "^3.12"
@@ -247,7 +247,7 @@ sqlalchemy = "^2.0.30"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "7ea1a4857f4e1ad251ce2a2b4d45da5ef0298cd0"
+resolved_reference = "f179a4dc2d3f19e82e33eb799fbbd73bd1097bf2"
 subdirectory = "evohub/evoflow_db"
 
 [[package]]
@@ -266,7 +266,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "7ea1a4857f4e1ad251ce2a2b4d45da5ef0298cd0"
+resolved_reference = "f179a4dc2d3f19e82e33eb799fbbd73bd1097bf2"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]
