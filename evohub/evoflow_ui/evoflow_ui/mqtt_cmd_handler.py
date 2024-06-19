@@ -56,6 +56,49 @@ class MqttCmdCentre:
         self.client.disconnect()
 
 
+import paho.mqtt.client as mqtt
+
+
+class MQTTSubscriber:
+    def __init__(self, broker, port, topic):
+        self.broker = broker
+        self.port = port
+        self.topic = topic
+        self.message = None
+        self.client = mqtt.Client()
+
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+
+    def on_connect(self, client, userdata, flags, rc):
+        print(f"Connected with result code {rc}")
+        self.client.subscribe(self.topic)
+
+    def on_message(self, client, userdata, msg):
+        print(f"Message received on topic {msg.topic}: {msg.payload.decode()}")
+        self.message = msg.payload.decode()
+
+    def get_message(self):
+        self.client.connect(self.broker, self.port, 60)
+        self.client.loop_start()
+
+        while self.message is None:
+            pass  # Wait until a message is received
+
+        self.client.loop_stop()
+        self.client.disconnect()
+        return self.message
+
+
+def get_mqtt_logs():
+    subscriber = MQTTSubscriber(
+        broker=str(Config.MQTT_HOST),
+        port=int(Config.MQTT_PORT),
+        topic="status/experiment",
+    )
+    return f"{subscriber.get_message()}"
+
+
 def command_centre():
     cmd_centre = MqttCmdCentre(
         client_id="cmd_centre",

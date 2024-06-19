@@ -1,4 +1,4 @@
-# Import necessary libraries
+import pandas as pd
 import dash
 from dash import html, dcc, Input, Output, State, no_update
 import dash_bootstrap_components as dbc
@@ -7,12 +7,12 @@ import json
 
 from evoflow_ui.db_callbacks import get_reactor_data, get_reactor_experiment_data
 from evoflow_ui.mqtt_callbacks import (
-    print_mqtt_messages,
     reset_stepper,
     start_stop_pause_experiment,
     new_experiment_command,
     update_experiment_command,
 )
+from evoflow_ui.mqtt_cmd_handler import get_mqtt_logs
 
 external_stylesheets = [
     dbc.themes.VAPOR,
@@ -26,7 +26,7 @@ app.layout = dbc.Container(
     [
         dcc.Interval(
             id="interval-component",
-            interval=5 * 1000,  # Update every 5 seconds
+            interval=2.5 * 1000,  # Update every 5 seconds
             n_intervals=0,
         ),
         dbc.Row(
@@ -561,7 +561,7 @@ app.layout = dbc.Container(
                     html.Iframe(
                         id="iframe",
                         src="http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk=true",
-                        style={"width": "100%", "height": "900px", "border": "none"},
+                        style={"width": "100%", "height": "1000px", "border": "none"},
                     ),
                     width=6,
                 ),
@@ -575,17 +575,11 @@ app.layout = dbc.Container(
 
 
 @app.callback(
-    [Output("textarea-mqtt-status", "value")],
-    [Input("interval-component", "n_intervals")],
+    Output("textarea-mqtt-status", "value"),
+    Input("interval-component", "n_intervals"),
 )
 def print_mqtt_to_log_window(n_intevarls):
-    # return print_mqtt_messages()
-    n_intevarls += 1
-    return [
-        f"""
-            ciccio_{n_intevarls}
-        """
-    ]
+    return get_mqtt_logs()
 
 
 @app.callback(
@@ -629,7 +623,6 @@ def create_iframe_url(reactor_name, experiment_name):
             f"?exp_name={experiment_name}"
             "&kiosk"
         )
-        print(url)
         return [url]
     return [
         "http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk"
