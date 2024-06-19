@@ -94,15 +94,6 @@ def update_experiment_command_on_db(experiment_id: int, experiment_config: json)
 def save_experiment_command_on_db(reactor_id: int, name: str, experiment_config: json):
     session_factory = sessionmaker(bind=idec_engine())
     with session_factory() as session:
-        exp = Experiment(
-            reactor_id=reactor_id,
-            name=name,
-            timestamp=int(time.time()),
-            status="stop",
-        )
-        session.add(exp)
-        session.commit()
-
         json_string = json.dumps(experiment_config)
 
         exp_conf = ExperimentConfig(
@@ -112,6 +103,19 @@ def save_experiment_command_on_db(reactor_id: int, name: str, experiment_config:
             inserted_at=datetime.date.now(),
         )
         session.add(exp_conf)
+        session.commit()
+
+        react = session.select(Reactor).where(Reactor.reactor_id == reactor_id)
+        exp = Experiment(
+            reactor_id=reactor_id,
+            name=name,
+            timestamp=int(time.time()),
+            status="stop",
+            reactor=react,
+            experiment_states=[],
+            exp_configs=exp_conf,
+        )
+        session.add(exp)
         session.commit()
 
         session.close()
