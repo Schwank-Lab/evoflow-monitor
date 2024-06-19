@@ -76,5 +76,7 @@ class Experiment(Base):
     experiment_states: Mapped["ExperimentState"] = relationship(
         back_populates="experiment"
     )
-    exp_config: Mapped["ExperimentConfig"] = relationship(back_populates="experiment")
+    experiment_config: Mapped["ExperimentConfig"] = relationship(
+        back_populates="experiment"
+    )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
