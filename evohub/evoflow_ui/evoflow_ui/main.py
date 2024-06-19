@@ -501,7 +501,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     html.Iframe(
                         id="iframe",
-                        src="",
+                        src="http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk",
                         style={"width": "100%", "height": "900px", "border": "none"},
                     ),
                     width=6,
@@ -518,13 +518,14 @@ app.layout = dbc.Container(
 @app.callback(
     [Output("iframe", "src")],
     [
-        Input("reactor-id-dropdown", "value"),
-        State("reactor-name", "children"),
-        State("experiment-name", "children"),
+        Input("reactor-name", "children"),
+        Input("experiment-name", "children"),
     ],
     prevent_initial_call=True,
 )
-def create_iframe_url(reactor_id, reactor_name, experiment_name):
+def create_iframe_url(reactor_name, experiment_name):
+    print(f"io : {reactor_name}")
+    print(experiment_name)
     if reactor_name and experiment_name:
         return [
             f"""
@@ -592,7 +593,7 @@ def enable_update_experiment_button_and_display(contents, filename):
     State("upload-new-exp-config", "filename"),
     prevent_initial_call="initial_duplicate",
 )
-def upodate_exp_modal_icon(contents, filename):
+def update_exp_modal_icon(contents, filename):
     if contents is not None:
         return [
             html.Div(
@@ -607,7 +608,6 @@ def upodate_exp_modal_icon(contents, filename):
 
 @app.callback(
     [Output("open-new-exp-modal", "disabled")],
-    # [Input("reactor-id-dropdown", "value")],
     [State("experiment-status", "children")],
     [Input("experiment-status", "children")],
     prevent_initial_call="initial_duplicate",
