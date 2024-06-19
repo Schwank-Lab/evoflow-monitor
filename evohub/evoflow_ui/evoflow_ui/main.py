@@ -588,15 +588,34 @@ def enable_update_experiment_button_and_display(contents, filename):
 
 @app.callback(
     [
-        Output("open-new-exp-modal", "disabled"),
+        Output("upload-new-exp-config", "children", allow_duplicate=True),
     ],
-    [Input("reactor-id-dropdown", "value")],
-    [
-        State("experiment-status", "children"),
-    ],
+    Input("upload-new-exp-config", "contents"),
+    State("upload-new-exp-config", "filename"),
+    prevent_initial_call="initial_duplicate",
+)
+def upodate_exp_modal_icon(contents, filename):
+    if contents is not None:
+        return [
+            html.Div(
+                [
+                    html.I(className="fas fa-file"),  # FontAwesome file icon
+                    html.Span(f" {filename}"),
+                ]
+            ),
+        ]
+    return [no_update]
+
+
+@app.callback(
+    [Output("open-new-exp-modal", "disabled")],
+    # [Input("reactor-id-dropdown", "value")],
+    [State("experiment-status", "children")],
+    [Input("experiment-status", "children")],
     prevent_initial_call="initial_duplicate",
 )
 def enbale_new_experiment(reactor_id, experiment_status):
+    print(experiment_status)
     if reactor_id and (experiment_status == "stop" or experiment_status is None):
         return [False]
     return [True]
