@@ -1,4 +1,5 @@
 from datetime import datetime
+from turtle import back
 from typing import List, Any
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, func
@@ -13,6 +14,9 @@ class Reactor(Base):
     network_id: Mapped[str] = mapped_column()
 
     # One-to-Many relationship with Experiment
+    reactor_config: Mapped[List["ReactorConfig"]] = relationship(
+        back_populates="reactor"
+    )
     experiments: Mapped[List["Experiment"]] = relationship(back_populates="reactor")
 
 
@@ -54,7 +58,9 @@ class ExperimentConfig(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="exp_configs")
+    experiment: Mapped["Experiment"] = relationship(
+        uselist=True, back_populates="exp_configs"
+    )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
@@ -67,15 +73,9 @@ class Experiment(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Reactor
-    reactor: Mapped["Reactor"] = relationship(back_populates="experiments")
-    # One-to-Many relationships with ReactorConfig, ReactorState, and ExpConfig
-    # reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
-    #     back_populates="experiment"
-    # )
-    experiment_states: Mapped[List["ExperimentState"]] = relationship(
+    reactor: Mapped["Reactor"] = relationship(uselist=True, back_populates="experiment")
+    experiment_states: Mapped["ExperimentState"] = relationship(
         back_populates="experiment"
     )
-    exp_configs: Mapped[List["ExperimentConfig"]] = relationship(
-        back_populates="experiment"
-    )
+    exp_configs: Mapped["ExperimentConfig"] = relationship(back_populates="experiment")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
