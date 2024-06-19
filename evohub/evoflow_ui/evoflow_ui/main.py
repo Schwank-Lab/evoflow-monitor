@@ -501,7 +501,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     html.Iframe(
                         id="iframe",
-                        src="http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk",
+                        src="http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk=true",
                         style={"width": "100%", "height": "900px", "border": "none"},
                     ),
                     width=6,
@@ -527,15 +527,14 @@ def create_iframe_url(reactor_name, experiment_name):
     print(f"io : {reactor_name}")
     print(experiment_name)
     if reactor_name and experiment_name:
-        return [
-            f"""
-                http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V
-                ?kiosk=True
-                ?reactor_name={reactor_name}
-                ?exp_name={experiment_name}
-                ?agg_interval=30s&agg_interval=1m&agg_interval=10m&agg_interval=30m&agg_interval=1h
-                """
-        ]
+        url = (
+            "http://10.66.4.7:3000/dashboard/snapshot/q6ubXYiHePWXOeqnWtLGgTUM0NoT0TIR"
+            f"?reactor_name={reactor_name}"
+            f"?exp_name={experiment_name}"
+            "&kiosk"
+        )
+        print(url)
+        return [url]
     return [
         "http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk"
     ]
