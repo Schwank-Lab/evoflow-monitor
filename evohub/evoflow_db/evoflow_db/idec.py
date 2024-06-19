@@ -16,7 +16,7 @@ class Reactor(Base):
     reactor_config: Mapped[List["ReactorConfig"]] = relationship(
         back_populates="reactor"
     )
-    experiments: Mapped[List["Experiment"]] = relationship(back_populates="reactor")
+    experiment: Mapped[List["Experiment"]] = relationship(back_populates="reactor")
 
 
 class ReactorConfig(Base):
