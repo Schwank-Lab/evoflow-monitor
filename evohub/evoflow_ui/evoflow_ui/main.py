@@ -529,13 +529,15 @@ def create_iframe_url(reactor_id, reactor_name, experiment_name):
         return [
             f"""
                 http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V
-                ?kiosk
+                ?kiosk=True
                 ?reactor_name={reactor_name}
                 ?exp_name={experiment_name}
                 ?agg_interval=30s&agg_interval=1m&agg_interval=10m&agg_interval=30m&agg_interval=1h
                 """
         ]
-    return ["http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V"]
+    return [
+        "http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk"
+    ]
 
 
 @app.callback(
