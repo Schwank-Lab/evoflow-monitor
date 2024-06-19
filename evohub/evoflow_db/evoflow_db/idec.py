@@ -27,7 +27,7 @@ class ReactorConfig(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    reactor: Mapped[List["Reactor"]] = relationship(back_populates="reactor_configs")
+    reactor: Mapped[List["Reactor"]] = relationship(back_populates="reactor_config")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
