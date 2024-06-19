@@ -13,18 +13,21 @@ class Reactor(Base):
     network_id: Mapped[str] = mapped_column()
 
     # One-to-Many relationship with Experiment
-    experiments: Mapped[List["Experiment"]] = relationship(back_populates="reactor")
+    reactor_config: Mapped[List["ReactorConfig"]] = relationship(
+        back_populates="reactor"
+    )
+    experiment: Mapped[List["Experiment"]] = relationship(back_populates="reactor")
 
 
 class ReactorConfig(Base):
     __tablename__ = "reactor_config"
     reactor_config_id: Mapped[int] = mapped_column(primary_key=True, init=False)
-    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiment.experiment_id"))
+    reactor_id: Mapped[int] = mapped_column(ForeignKey("reactor.reactor_id"))
     reactor_config_json: Mapped[dict[str, Any]] = mapped_column()
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="reactor_configs")
+    reactor: Mapped[List["Reactor"]] = relationship(back_populates="reactor_config")
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
@@ -54,7 +57,9 @@ class ExperimentConfig(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Experiment
-    experiment: Mapped["Experiment"] = relationship(back_populates="exp_configs")
+    experiment: Mapped["Experiment"] = relationship(
+        uselist=True, back_populates="experiment_config"
+    )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
 
@@ -67,15 +72,11 @@ class Experiment(Base):
     timestamp: Mapped[int] = mapped_column()
 
     # Many-to-One relationship with Reactor
-    reactor: Mapped["Reactor"] = relationship(back_populates="experiments")
-    # One-to-Many relationships with ReactorConfig, ReactorState, and ExpConfig
-    reactor_configs: Mapped[List["ReactorConfig"]] = relationship(
+    reactor: Mapped[List["Reactor"]] = relationship(back_populates="experiment")
+    experiment_states: Mapped["ExperimentState"] = relationship(
         back_populates="experiment"
     )
-    experiment_states: Mapped[List["ExperimentState"]] = relationship(
-        back_populates="experiment"
-    )
-    exp_configs: Mapped[List["ExperimentConfig"]] = relationship(
+    experiment_config: Mapped["ExperimentConfig"] = relationship(
         back_populates="experiment"
     )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())

@@ -1,7 +1,6 @@
 # Import necessary libraries
-from pydoc import classname
 import dash
-from dash import html, dcc, Input, Output, State, no_update, ctx
+from dash import html, dcc, Input, Output, State, no_update
 import dash_bootstrap_components as dbc
 import base64
 import json
@@ -561,9 +560,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     html.Iframe(
                         id="iframe",
-                        src="""
-                            http://10.66.4.7:3000/dashboard/snapshot/0hvlbmnLDSh5CNCT9tyr04MGUFtUYADE?kiosk
-                        """,
+                        src="http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk=true",
                         style={"width": "100%", "height": "900px", "border": "none"},
                     ),
                     width=6,
@@ -617,35 +614,25 @@ def show_experiment_staus(reactor_id, style):
 @app.callback(
     [Output("iframe", "src")],
     [
-        Input("reactor-id-dropdown", "value"),
-        State("reactor-name", "children"),
-        State("experiment-name", "children"),
+        Input("reactor-name", "children"),
+        Input("experiment-name", "children"),
     ],
     prevent_initial_call=True,
 )
-def create_iframe_url(reactor_id, reactor_name, experiment_name):
-    # reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
-    # reactor_name, experiment_name = reactor_data[0], experiment_data[0]
-    print(
-        f"""
-        create_iframe_url: 
-            reactor_id passed {reactor_id}, 
-            reactor_name passed {reactor_name}, 
-            experiment_name passed {experiment_name}
-        """
-    )
+def create_iframe_url(reactor_name, experiment_name):
+    print(f"io : {reactor_name}")
+    print(experiment_name)
     if reactor_name and experiment_name:
-        return [
-            f"""
-                http://10.66.4.7:3000/dashboard/snapshot/0hvlbmnLDSh5CNCT9tyr04MGUFtUYADE
-                ?kiosk
-                ?reactor_name={reactor_name}
-                ?exp_name={experiment_name}
-                ?agg_interval=30s&agg_interval=1m&agg_interval=10m&agg_interval=30m&agg_interval=1h
-                """
-        ]
+        url = (
+            "http://10.66.4.7:3000/dashboard/snapshot/q6ubXYiHePWXOeqnWtLGgTUM0NoT0TIR"
+            f"?reactor_name={reactor_name}"
+            f"?exp_name={experiment_name}"
+            "&kiosk"
+        )
+        print(url)
+        return [url]
     return [
-        "http://10.66.4.7:3000/dashboard/snapshot/0hvlbmnLDSh5CNCT9tyr04MGUFtUYADE?kiosk"
+        "http://10.66.4.7:3000/dashboard/snapshot/Qf52cK56Yt2C1Kmg3CjocRdsgZXehx3V?kiosk"
     ]
 
 
@@ -673,10 +660,11 @@ def toggle_modal(n1, n2, is_open):
 @app.callback(
     [
         Output("update-experiment", "disabled"),
-        Output("upload-exp-config", "children"),
+        Output("upload-exp-config", "children", allow_duplicate=True),
     ],
     Input("upload-exp-config", "contents"),
     State("upload-exp-config", "filename"),
+    prevent_initial_call="initial_duplicate",
 )
 def enable_update_experiment_button_and_display(contents, filename):
     if contents is not None:
@@ -692,19 +680,17 @@ def enable_update_experiment_button_and_display(contents, filename):
     return [True, no_update]
 
 
-# This callback will monitor the content and activate the button if available
 @app.callback(
     [
-        Output("update-reactor", "disabled"),
-        Output("upload-reactor-config", "children"),
+        Output("upload-new-exp-config", "children", allow_duplicate=True),
     ],
-    Input("upload-reactor-config", "contents"),
-    State("upload-reactor-config", "filename"),
+    Input("upload-new-exp-config", "contents"),
+    State("upload-new-exp-config", "filename"),
+    prevent_initial_call="initial_duplicate",
 )
-def enable_update_reactor_button_and_display(contents, filename):
+def update_exp_modal_icon(contents, filename):
     if contents is not None:
         return [
-            False,
             html.Div(
                 [
                     html.I(className="fas fa-file"),  # FontAwesome file icon
@@ -712,7 +698,20 @@ def enable_update_reactor_button_and_display(contents, filename):
                 ]
             ),
         ]
-    return [True, no_update]
+    return [no_update]
+
+
+@app.callback(
+    [Output("open-new-exp-modal", "disabled")],
+    [State("experiment-status", "children")],
+    [Input("experiment-status", "children")],
+    prevent_initial_call="initial_duplicate",
+)
+def enbale_new_experiment(reactor_id, experiment_status):
+    print(experiment_status)
+    if reactor_id and (experiment_status == "stop" or experiment_status is None):
+        return [False]
+    return [True]
 
 
 # Callback to handle saving a new experiment
@@ -722,9 +721,10 @@ def enable_update_reactor_button_and_display(contents, filename):
     State("new-exp-name", "value"),
     State("upload-new-exp-config", "contents"),
     State("reactor-id", "children"),
+    State("modal-new-exp", "is_open"),
     prevent_initial_call=True,
 )
-def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
+def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id, is_open):
     if n_clicks and new_exp_name and contents and reactor_id:
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
@@ -737,9 +737,9 @@ def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id):
         )
 
         # Update the UI with the new experiment data
-        return not ctx.states["modal-new-exp.is_open"]
+        return not is_open
 
-    return no_update
+    return is_open
 
 
 # Callback to handle the upload and update of the experiment configuration file
