@@ -59,7 +59,7 @@ class ExperimentConfig(Base):
 
     # Many-to-One relationship with Experiment
     experiment: Mapped["Experiment"] = relationship(
-        uselist=True, back_populates="exp_configs"
+        uselist=True, back_populates="experiment_config"
     )
     inserted_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
 
