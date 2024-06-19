@@ -78,8 +78,8 @@ def update_experiment_command_on_db(experiment_id: int, experiment_config: json)
     json_string = json.dumps(experiment_config)
     with Session(idec_engine()) as session:
         update_stmt = (
-            update(experiment_config)
-            .where(Experiment.experiment_id == experiment_id)
+            update(ExperimentConfig)
+            .where(ExperimentConfig.experiment_id == experiment_id)
             .values(exp_config_json=json_string)
         )
         session.execute(update_stmt)
@@ -93,7 +93,7 @@ def save_experiment_command_on_db(reactor_id: int, name: str, experiment_config:
         reactor_id=reactor_id,
         name=name,
         timestamp=int(time.time()),
-        status="stop",
+        status="pause",
     )
     with Session(idec_engine()) as session:
         session.add(exp)
