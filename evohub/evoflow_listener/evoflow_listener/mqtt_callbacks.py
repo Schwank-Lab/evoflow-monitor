@@ -5,13 +5,13 @@ from evoflow_db.idec import (
     Reactor,
     ReactorConfig,
     ExperimentState,
-    ExpConfig,
+    ExperimentConfig,
     Experiment,
 )
 
 
 def write_to_database(
-    table: Reactor | ReactorConfig | ExperimentState | ExpConfig | Experiment,
+    table: Reactor | ReactorConfig | ExperimentState | ExperimentConfig | Experiment,
     data: dict,
 ):
     session_factory = sessionmaker(bind=idec_engine())
