@@ -2,7 +2,9 @@
 FROM python:3.12-alpine
 
 # Install openssh
-RUN apk add --no-cache poetry openssh
+RUN apk add --no-cache openssh poetry
+
+RUN echo poetry --version
 
 # Set up ssh
 RUN mkdir -p /root/.ssh \

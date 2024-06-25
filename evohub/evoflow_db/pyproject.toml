@@ -6,7 +6,7 @@ authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
 sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
