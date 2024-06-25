@@ -6,14 +6,10 @@ WORKDIR /app
 # Copy the Poetry lock file and the pyproject.toml
 COPY pyproject.toml poetry.lock README.md ./
 
-#COPY evoflow_ui ./evoflow_ui
-RUN poetry update -vv
-
 # Install dependencies
 RUN eval "$(ssh-agent -s)" && \
-    ssh-add /root/.ssh/idec_github 
-
-RUN  poetry install -vv
+    ssh-add /root/.ssh/idec_github && \
+    poetry install --no-root
 
 EXPOSE 8181
 

@@ -234,7 +234,7 @@ name = "evoflow-db"
 version = "0.1.15"
 description = ""
 optional = false
-python-versions = "^3.12"
+python-versions = "^3.11"
 files = []
 develop = false
 
@@ -247,7 +247,7 @@ sqlalchemy = "^2.0.30"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "2439f9bcc813d79ce7e135cfab590a0c36317678"
+resolved_reference = "02d1259d0555cd813e9af4be3d79c3fa284db00e"
 subdirectory = "evohub/evoflow_db"
 
 [[package]]
@@ -255,7 +255,7 @@ name = "evoflow-utils"
 version = "0.1.1"
 description = ""
 optional = false
-python-versions = "^3.12"
+python-versions = "^3.11"
 files = []
 develop = false
 
@@ -266,7 +266,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "2439f9bcc813d79ce7e135cfab590a0c36317678"
+resolved_reference = "02d1259d0555cd813e9af4be3d79c3fa284db00e"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]
@@ -618,7 +618,10 @@ files = [
 ]
 
 [package.dependencies]
-numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
+numpy = [
+    {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
+]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
 tzdata = ">=2022.7"
@@ -1019,5 +1022,5 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "95441cea150884f174e972c9f27d5f207ab5fe0785c17c1e6034e015253cdb14"
+python-versions = "^3.11"
+content-hash = "55d8f0914bfd5425dbfaff1e9db97db215989e0262c76d22d074fc9d991fcede"

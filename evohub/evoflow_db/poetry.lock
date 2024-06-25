@@ -5,7 +5,7 @@ name = "evoflow-utils"
 version = "0.1.1"
 description = ""
 optional = false
-python-versions = "^3.12"
+python-versions = "^3.11"
 files = []
 develop = false
 
@@ -16,7 +16,7 @@ python-dotenv = "^1.0.1"
 type = "git"
 url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
 reference = "main"
-resolved_reference = "68aaf2e3ea9f67a4e0ea4b9e7be53ccb8d442781"
+resolved_reference = "02d1259d0555cd813e9af4be3d79c3fa284db00e"
 subdirectory = "evohub/evoflow_utils"
 
 [[package]]
@@ -285,5 +285,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "33e1b0dd5fbe401365f1c1f044a5cedf2e6758863aabc8f8eaedd3e0bd12bf9f"
+python-versions = "^3.11"
+content-hash = "f3a7b7b9e6879206cacf007976d3bf2352716c64abdb25f6042d3ba351808395"
