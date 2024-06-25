@@ -628,11 +628,11 @@ def create_iframe_url(reactor_name, experiment_name):
         return html.Iframe(
             id="iframe",
             src=(
-                "http://10.66.4.7:3000/dashboard/snapshot/ARi9P0gS11pFnjTKi3gHrdxxrLYdrU4S"
+                "http://10.66.4.7:3000/dashboard/snapshot/LR1PWU9y4wZVg3kTehNY2Avek34piR3U"
                 f"?reactor_name={reactor_name}"
-                f"?exp_name={experiment_name}"
-                f"?update_interval=10m"
-                "&kiosk"
+                f"&experiment_name={experiment_name}"
+                "&update_interval=30s"
+                # "&kiosk"
             ),
             style={
                 "width": "100%",
