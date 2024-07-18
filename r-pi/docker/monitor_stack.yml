@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  evohub_listener:
+    container_name: mqtt_listener
+    image: evoflow_listener:latest
+    restart: always
+
+  evohub_ui:
+    container_name: ui
+    image: evoflow_ui:latest
+    restart: always
+    ports:
+      - "8282:8181"
+
+networks:
+  default:
+    name: default_backend
+    driver: bridge
+    

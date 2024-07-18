@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   prefect_server:
@@ -12,26 +12,19 @@ services:
       - prefect_data:/root/.prefect
       - prefect_flows:/flows
     environment:
-      - PREFECT_SERVER_API_HOST=0.0.0.0
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      AWS_ACCESS_KEY_ID: 75igVmmMH0n6uSq0CHjn
+      AWS_SECRET_ACCESS_KEY: pnlV6exeMwHteBl50B5CfQmjd22YBwuk6YK8IvOK
 
   prefect_agent:
-    image: prefecthq/prefect:2-latest
-    privileged: true # forced for Docker DinD
-    # entrypoint: ["/bin/sh", "-c"]
-    command: prefect worker start
+    image: prefect_agent:latest
+    command: prefect agent start -p "idec"
+    restart: always
     environment:
-      PREFECT_API_URL: "http://0.0.0.0:4200/api"
-    # volumes:
-    #   - type: bind
-    #     source: /var/run/docker.sock
-    #     target: /var/run/docker.sock
-    #     read_only: true
-        
+        PREFECT_API_URL: "http://10.66.4.6:4200/api" # this is the server lab ip
+        AWS_ACCESS_KEY_ID: 75igVmmMH0n6uSq0CHjn # this have been created from minio
+        AWS_SECRET_ACCESS_KEY: pnlV6exeMwHteBl50B5CfQmjd22YBwuk6YK8IvOK #same 
+
 volumes:
   prefect_data:
-  prefect_flows:
-  
-networks:
-  default:
-    name: monitor_stack_default
-    external: true
+  prefect_flows:       
