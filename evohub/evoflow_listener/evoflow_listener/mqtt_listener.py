@@ -71,9 +71,13 @@ class MqttListener:
         client.subscribe([(t, 1) for t in self.topics])
 
     def on_message(self, client, userdata, msg):
-        data = json.loads(msg.payload.decode("utf-8"))
-        logger.info(f"Message on topic {msg.topic} with data {data}")
-        self.topics_handlers[msg.topic](data)
+        try: 
+            data = json.loads(msg.payload.decode("utf-8"))
+            logger.info(f"Message on topic {msg.topic} with data {data}")
+            self.topics_handlers[msg.topic](data)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}", exc_info=True)
+            
 
     def stop(self):
         self.client.loop_stop()
