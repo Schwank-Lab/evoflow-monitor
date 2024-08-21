@@ -1,4 +1,5 @@
 ## Deploying MQTT Listener
+The follwing steps are needed when the code in the MQTT has changed: 
 
 1. SSH into evhohub
 2. Navigate to `/home/evohub/Workspace/evohub`
