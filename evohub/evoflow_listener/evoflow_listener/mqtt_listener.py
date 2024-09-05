@@ -67,7 +67,7 @@ class MqttListener:
         self.topics_handlers = topics_handlers
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
-        print("Connected with result code " + str(rc))
+        print("MqttListner#on_connect: Connected with result code " + str(rc))
         client.subscribe([(t, 1) for t in self.topics])
 
     def on_message(self, client, userdata, msg):
@@ -84,8 +84,8 @@ class MqttListener:
         self.client.disconnect()
 
 
-def main():
-    subscriber = MqttListener(
+def create_mqtt_listener():
+    return MqttListener(
         client_id="monitor",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
@@ -93,6 +93,9 @@ def main():
         topics_handlers=mqtt_handlers,
     )
 
+
+def main():
+    subscriber = create_mqtt_listener()
     try:
         logger.info("Subscriber Started.")
         # Run indefinitely

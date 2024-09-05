@@ -12,6 +12,7 @@ sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
 evoflow_db = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_db" }
 evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
+pytest = "^8.3.2"
 
 [tool.poetry.scripts]
 listen = "evoflow_listener.mqtt_listener:main"

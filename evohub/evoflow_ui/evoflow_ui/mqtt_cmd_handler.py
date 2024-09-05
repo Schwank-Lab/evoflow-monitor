@@ -2,6 +2,8 @@ from collections import deque
 import json
 import paho.mqtt.client as mqtt
 from evoflow_utils.config import Config
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 class MqttCmdCentre:
@@ -15,48 +17,37 @@ class MqttCmdCentre:
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
             client_id,
+            clean_session=False,
+            reconnect_on_failure=False,
         )
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.client.on_disconnect = self.on_disconnect
+        self.client.enable_logger()
         self.topics = topics
-        self.client.connect(broker, port, 60)
+        print(f"MqttCmdCenter#init: Connecting to broker {broker} on port {port}")
+        ret_code = self.client.connect(broker, port, 60)
+        print(f"MqttCmdCenter#init: Connection result code {str(ret_code)}")
         self.client.loop_start()
-        self.message_queue = deque(maxlen=10)
-
+        
+        
     def on_connect(self, client, userdata, flags, rc, properties=None):
-        print("Connected with result code " + str(rc))
+        print("MqttCmdCenter#on_connect: Connected with result code " + str(rc))
         self.client.subscribe([(t, 1) for t in self.topics])
 
+    def on_disconnect(self, client, userdata, rc, *args):
+        print(f"Disconnected with result code {rc}", *args)
+
     def on_message(self, client, userdata, msg):
-        print(
-            f"I am the controll centre. This is the topic: {msg.topic}, this is the message {msg}"
-        )
-        if msg.topic == "status/experiment":
-            data = json.loads(msg.payload.decode("utf-8"))
-            self.message_queue.append((msg, data))
+        print(f"I am the controll centre. This is the topic: {msg.topic}, this is the message {msg}")
 
     def send_cmds(self, topic, msg):
-        print(
-            f"I am the controll centre. This is the topic {topic}, this is the message {msg}"
-        )
+        print(f"I am the controll centre. This is the topic {topic}, this is the message {msg}")
         self.client.publish(topic, msg)
-
-    def format_message(self, data):
-        return f"""
-                {data}
-        """
-
-    def get_messages_from_queue(self):
-        if len(self.message_queue) > 0:
-            return [self.format_message(data) for _, data in self.message_queue]
-        return [""]
 
     def stop(self):
         self.client.loop_stop()
         self.client.disconnect()
-
-
-import paho.mqtt.client as mqtt
 
 
 class MQTTSubscriber:
@@ -71,7 +62,7 @@ class MQTTSubscriber:
         self.client.on_message = self.on_message
 
     def on_connect(self, client, userdata, flags, rc):
-        print(f"Connected with result code {rc}")
+        print(f"MQTTSubscriber#on_connect: Connected with result code {rc}")
         self.client.subscribe(self.topic)
 
     def on_message(self, client, userdata, msg):
@@ -101,7 +92,7 @@ def get_mqtt_logs():
 
 def command_centre():
     cmd_centre = MqttCmdCentre(
-        client_id="cmd_centre",
+        client_id="cmd_centre_local2",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
         topics=["commands"],

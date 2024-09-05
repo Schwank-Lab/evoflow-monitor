@@ -6,6 +6,8 @@ from evoflow_ui.db_callbacks import (
 )
 from evoflow_ui.mqtt_cmd_handler import command_centre
 
+cmd_center = command_centre()
+
 
 def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: str):
     # first update status on db
@@ -16,14 +18,10 @@ def start_stop_pause_experiment(reactor_id: int, experiment_id: int, command: st
         "command": command,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
-
-    return None
+    cmd_center.send_cmds(topic="commands", msg=json.dumps(payload))
 
 
-def update_experiment_command(
-    reactor_id: int, experiment_id: int, experiment_config: json
-):
+def update_experiment_command(reactor_id: int, experiment_id: int, experiment_config: json):
     # first update status on db
     update_experiment_command_on_db(experiment_id, experiment_config)
 
@@ -34,10 +32,7 @@ def update_experiment_command(
         "experiment_config": experiment_config,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
-
-    return None
-
+    cmd_center.send_cmds(topic="commands", msg=json.dumps(payload))
 
 def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
     print(f"reactor_id {reactor_id}")
@@ -53,9 +48,7 @@ def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
         "experiment_config": experiment_config,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
-
-    return None
+    cmd_center.send_cmds(topic="commands", msg=json.dumps(payload))
 
 
 def reset_stepper(reactor_id, command, stepper_volume=None):
@@ -65,9 +58,7 @@ def reset_stepper(reactor_id, command, stepper_volume=None):
         "stepper_vol": stepper_volume,
     }
 
-    command_centre().send_cmds(topic="commands", msg=json.dumps(payload))
-
-    return None
+    cmd_center.send_cmds(topic="commands", msg=json.dumps(payload))
 
 
 # def print_mqtt_messages():
