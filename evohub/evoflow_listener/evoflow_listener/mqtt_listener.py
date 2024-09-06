@@ -33,13 +33,13 @@ def write_experiment_status_to_db(data: dict):
     with session_factory() as session:
         insert_stmt = insert(ExperimentState).values(
             lagoon_temp=data["lagoon_temp"],
-            inc_right_temp=data["inc_right_temp"],
             experiment_id=data["experiment_id"],
             inc_right_od=data["inc_right_od"],
-            inc_left_dilution=data["inc_left_dilution"],
-            inc_left_temp=data["inc_left_temp"],
-            inc_right_dilution=data["inc_right_dilution"],
+            inc_right_temp=data["inc_right_temp"],
+            inc_right_tot_dil=data["inc_right_dilution"],
             inc_left_od=data["inc_left_od"],
+            inc_left_tot_dil=data["inc_left_dilution"],
+            inc_left_temp=data["inc_left_temp"],
             timestamp=data["timestamp"],
             lagoon_flow_rate=data["lagoon_flow_rate"],
         )
@@ -60,6 +60,8 @@ def create_experiment_status_listener():
 
 def main():
     subscriber = create_experiment_status_listener()
+    subscriber.connect()
+
     try:
         logger.info("Subscriber Started.")
         # Run indefinitely
