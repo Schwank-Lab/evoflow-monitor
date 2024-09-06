@@ -4,6 +4,7 @@ from dash import html, dcc, Input, Output, State, no_update
 import dash_bootstrap_components as dbc
 import base64
 import json
+import atexit
 
 from evoflow_ui.db_callbacks import get_reactor_data, get_reactor_experiment_data
 from evoflow_ui.mqtt_callbacks import (
@@ -11,8 +12,9 @@ from evoflow_ui.mqtt_callbacks import (
     start_stop_pause_experiment,
     new_experiment_command,
     update_experiment_command,
+    get_reactor_state,
 )
-from evoflow_ui.mqtt_cmd_handler import get_mqtt_logs
+from evoflow_ui import mqtt_callbacks
 
 external_stylesheets = [
     dbc.themes.VAPOR,
@@ -364,7 +366,7 @@ app.layout = dbc.Container(
                                                                                 },
                                                                             ),
                                                                             html.H3(
-                                                                                "Experiment Status ",
+                                                                                "Reactor Status ",
                                                                             ),
                                                                             dbc.Card(
                                                                                 dbc.CardBody(
@@ -640,9 +642,15 @@ app.layout = dbc.Container(
 @app.callback(
     Output("textarea-mqtt-status", "value"),
     Input("interval-component", "n_intervals"),
+    State("reactor-id", "children"),
 )
-def print_mqtt_to_log_window(n_intevarls):
-    pass  # TODO: fix, this might be blocking. return get_mqtt_logs()
+def print_reactor_status(n_intevarls, reactor_id):
+    if reactor_id is None: 
+        return ""
+    reactor_state =  get_reactor_state(int(reactor_id))
+    if reactor_state is None:
+        return "No data available"
+    return '\n'.join([f'{key}:\t\t{value}' for key, value in reactor_state.items()])
 
 
 @app.callback(
@@ -727,6 +735,7 @@ def toggle_new_experiment_modal(open_new_exp_modal, save_new_exp, is_open):
         return False
     else:
         return is_open 
+    
 
 @app.callback(
     Output("modal-update-exp", "is_open"),
@@ -741,6 +750,7 @@ def toggle_update_experiment_modal(open_update_exp_modal, update_exp, is_open):
         return False
     else:
         return is_open 
+    
 
 @app.callback(
     [Output("open-update-exp-modal", "disabled")],
@@ -972,7 +982,7 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
 
 
 @app.callback(Output("stepper-label", "children"), Input("stepper-slider", "value"))
-def update_output(value):
+def update_stepper_target_volume(value):
     return 'Stepper Volume ("{}")'.format(value)
 
 
@@ -1014,8 +1024,14 @@ def reset_stepper_stop(reactor_id, n_clicks):
 
     return no_update
 
+@atexit.register
+def disconnect_from_mqtt():
+    print('App: disconnecting from mqtt client')
+    mqtt_callbacks.mqtt_client.stop()
+
 
 def main():
+    mqtt_callbacks.mqtt_client.connect()
     app.run_server(
         debug=True,
         host="0.0.0.0",

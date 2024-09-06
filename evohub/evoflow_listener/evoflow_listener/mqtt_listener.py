@@ -1,24 +1,15 @@
-from typing import Callable, TypedDict
 import sys
-import paho.mqtt.client as mqtt
-import json
 import time
 import logging
+from sqlalchemy import insert
+from sqlalchemy.orm import sessionmaker
+
+from evoflow_utils.mqtt_client import MqttClient
 from evoflow_utils.config import Config
-from evoflow_listener.mqtt_callbacks import (
-    write_experiment_status_to_db,
-    write_reactor_status_to_db,
-    parse_logs_experiment,
-    parse_logs_reactor,
-    parse_reactor_commands,
-    parse_experiment_commands,
-)
+from evoflow_db.idec import ExperimentState
+from evoflow_db import idec_engine
 
-
-class EvohubTopics(TypedDict):
-    topic: str
-    script: Callable
-
+db_engine = idec_engine()
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -36,66 +27,39 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 
-mqtt_handlers: EvohubTopics = {
-    "status/experiment": lambda x: write_experiment_status_to_db(x),
-    "status/reactor": lambda x: write_reactor_status_to_db(x),
-    "logs/experiment": lambda x: parse_logs_experiment(x),
-    "logs/reactor": lambda x: parse_logs_reactor(x),
-    "commands/experiment": lambda x: parse_experiment_commands(x),
-    "commands/reactor": lambda x: parse_reactor_commands(x),
-}
-
-
-class MqttListener:
-    def __init__(
-        self,
-        client_id: str,
-        broker: str,
-        port: int,
-        topics: list[str],
-        topics_handlers: EvohubTopics,
-    ):
-        self.client = mqtt.Client(
-            mqtt.CallbackAPIVersion.VERSION2,
-            client_id,
+def write_experiment_status_to_db(data: dict):
+    print("Write experiment data to db")
+    session_factory = sessionmaker(bind=db_engine)
+    with session_factory() as session:
+        insert_stmt = insert(ExperimentState).values(
+            lagoon_temp=data["lagoon_temp"],
+            inc_right_temp=data["inc_right_temp"],
+            experiment_id=data["experiment_id"],
+            inc_right_od=data["inc_right_od"],
+            inc_left_dilution=data["inc_left_dilution"],
+            inc_left_temp=data["inc_left_temp"],
+            inc_right_dilution=data["inc_right_dilution"],
+            inc_left_od=data["inc_left_od"],
+            timestamp=data["timestamp"],
+            lagoon_flow_rate=data["lagoon_flow_rate"],
         )
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        self.client.connect(broker, port, 60)
-        self.client.loop_start()
-        self.topics = topics
-        self.topics_handlers = topics_handlers
-
-    def on_connect(self, client, userdata, flags, rc, properties=None):
-        print("MqttListner#on_connect: Connected with result code " + str(rc))
-        client.subscribe([(t, 1) for t in self.topics])
-
-    def on_message(self, client, userdata, msg):
-        try: 
-            data = json.loads(msg.payload.decode("utf-8"))
-            logger.info(f"Message on topic {msg.topic} with data {data}")
-            self.topics_handlers[msg.topic](data)
-        except Exception as e:
-            logger.error(f"An error occurred: {e}", exc_info=True)
-            
-
-    def stop(self):
-        self.client.loop_stop()
-        self.client.disconnect()
+        session.execute(insert_stmt)
+        session.commit()
 
 
-def create_mqtt_listener():
-    return MqttListener(
+def create_experiment_status_listener():
+    return MqttClient(
         client_id="monitor",
         broker=str(Config.MQTT_HOST),
         port=int(Config.MQTT_PORT),
-        topics=list(mqtt_handlers.keys()),
-        topics_handlers=mqtt_handlers,
+        topics_handlers={
+            "status/experiment": write_experiment_status_to_db
+        },
     )
 
 
 def main():
-    subscriber = create_mqtt_listener()
+    subscriber = create_experiment_status_listener()
     try:
         logger.info("Subscriber Started.")
         # Run indefinitely
