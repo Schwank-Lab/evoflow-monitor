@@ -16,10 +16,7 @@ from evoflow_ui.mqtt_callbacks import (
 )
 from evoflow_ui import mqtt_callbacks
 
-external_stylesheets = [
-    dbc.themes.VAPOR,
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
-]
+external_stylesheets = []
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -685,24 +682,22 @@ def show_experiment_staus(reactor_id, style):
     prevent_initial_call=True,
 )
 def create_iframe_url(reactor_name, experiment_name):
-    print(f"io : {reactor_name}")
-    print(experiment_name)
-    if reactor_name and experiment_name:
-        return html.Iframe(
-            id="iframe",
-            src=(
-                "http://10.66.4.7:3000/dashboard/snapshot/LR1PWU9y4wZVg3kTehNY2Avek34piR3U"
-                f"?reactor_name={reactor_name}"
-                f"&experiment_name={experiment_name}"
-                "&update_interval=30s"
-                # "&kiosk"
-            ),
-            style={
-                "width": "100%",
-                "height": "900px",
-                "border": "none",
-            },
-        )
+    # if reactor_name and experiment_name:
+    #     return html.Iframe(
+    #         id="iframe",
+    #         src=(
+    #             "http://10.66.4.7:3000/d/bdp9pr3doijnkc"
+    #             f"?reactor_name={reactor_name}"
+    #             f"&experiment_name={experiment_name}"
+    #             "&update_interval=30s"
+    #             # "&kiosk"
+    #         ),
+    #         style={
+    #             "width": "100%",
+    #             "height": "900px",
+    #             "border": "none",
+    #         },
+    #     )
     return html.Img(
         src="./assets/Asset 1.png",
         style={

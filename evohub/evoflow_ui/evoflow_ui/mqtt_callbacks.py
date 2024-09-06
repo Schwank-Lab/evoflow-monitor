@@ -38,7 +38,9 @@ class ReactorStateListener:
         If last update is too stale, return None.
         """
         last_update, last_state =  self._reactor_states.get(reactor_id, (None, None))
-        time_since_last_update = datetime.now() - last_update
+        if not last_update:
+            return None
+        time_since_last_update = datetime.now() - last_update 
         if time_since_last_update.total_seconds() > self._time_valid_sec:
             return None
         return last_state 
