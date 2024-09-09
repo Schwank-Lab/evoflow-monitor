@@ -16,9 +16,8 @@ from evoflow_ui.mqtt_callbacks import (
 )
 from evoflow_ui import mqtt_callbacks
 
-external_stylesheets = []
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 
 new_exp_modal =  dbc.Modal(
                     [

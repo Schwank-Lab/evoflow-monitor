@@ -23,8 +23,7 @@ class MqttClient:
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
             client_id,
-            clean_session=True,
-            reconnect_on_failure=False,
+            clean_session=True
         )
         self.client.enable_logger(logger)
         self.client.on_connect = self.on_connect
