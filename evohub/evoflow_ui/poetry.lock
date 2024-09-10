@@ -236,16 +236,19 @@ description = ""
 optional = false
 python-versions = "^3.11"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
-evoflow_utils = {path = "../evoflow_utils", develop = true}
+evoflow_utils = {git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils"}
 psycopg2-binary = "^2.9.9"
 sqlalchemy = "^2.0.30"
 
 [package.source]
-type = "directory"
-url = "../evoflow_db"
+type = "git"
+url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
+reference = "main"
+resolved_reference = "d70fd140ea8d35b58b44fde15868a905f2639ac6"
+subdirectory = "evohub/evoflow_db"
 
 [[package]]
 name = "evoflow-utils"
@@ -254,14 +257,17 @@ description = ""
 optional = false
 python-versions = "^3.11"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 python-dotenv = "^1.0.1"
 
 [package.source]
-type = "directory"
-url = "../evoflow_utils"
+type = "git"
+url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
+reference = "main"
+resolved_reference = "d70fd140ea8d35b58b44fde15868a905f2639ac6"
+subdirectory = "evohub/evoflow_utils"
 
 [[package]]
 name = "flask"
@@ -1080,4 +1086,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c2619bf02977578668da6035164f3c3b8167244c0bb2b8b43f3ebe486c9ff8da"
+content-hash = "3e062f537a4cb6825dbdba0d88855aee32657f8971ec1df1c5e99dcc1995849a"

@@ -7,14 +7,17 @@ description = ""
 optional = false
 python-versions = "^3.11"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 python-dotenv = "^1.0.1"
 
 [package.source]
-type = "directory"
-url = "../evoflow_utils"
+type = "git"
+url = "git@github.com:Schwank-Lab/evoflow-monitor.git"
+reference = "main"
+resolved_reference = "d70fd140ea8d35b58b44fde15868a905f2639ac6"
+subdirectory = "evohub/evoflow_utils"
 
 [[package]]
 name = "greenlet"
@@ -283,4 +286,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3378d69cd0288b0bd8490ed3a12a417cf295667feb0c14bb0aaa4454b68e43f7"
+content-hash = "f3a7b7b9e6879206cacf007976d3bf2352716c64abdb25f6042d3ba351808395"
