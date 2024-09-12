@@ -8,7 +8,7 @@ import atexit
 
 from evoflow_ui.db_callbacks import get_reactor_data, get_reactor_experiment_data
 from evoflow_ui.mqtt_callbacks import (
-    reset_stepper,
+    send_command,
     start_stop_pause_experiment,
     new_experiment_command,
     update_experiment_command,
@@ -204,6 +204,7 @@ app.layout = dbc.Container(
                         ),
                         dbc.Row(
                             dbc.Col(
+                                [
                                 dbc.Card(
                                     dbc.CardBody(
                                         [
@@ -440,19 +441,6 @@ app.layout = dbc.Container(
                                                                                         ],
                                                                                         className="mb-3",
                                                                                     ),
-                                                                                    dbc.Row(
-                                                                                        [
-                                                                                            dbc.Label(
-                                                                                                "Network ID (e.g., IP)",
-                                                                                                className="col-form-label col-sm-4",
-                                                                                            ),
-                                                                                            dbc.Label(
-                                                                                                id="network-id",
-                                                                                                className="col-sm-8",
-                                                                                            ),
-                                                                                        ],
-                                                                                        className="mb-3",
-                                                                                    ),
                                                                                 ]
                                                                             )
                                                                         )
@@ -485,7 +473,7 @@ app.layout = dbc.Container(
                                                                                             ),
                                                                                             dcc.Slider(
                                                                                                 min=0,
-                                                                                                max=1000,
+                                                                                                max=80,
                                                                                                 step=5,
                                                                                                 value=10,
                                                                                                 id="stepper-slider",
@@ -500,34 +488,36 @@ app.layout = dbc.Container(
                                                                                         },
                                                                                     ),
                                                                                     dbc.Row(
-                                                                                        [
-                                                                                            dbc.Col(
-                                                                                                [
-                                                                                                    dbc.Button(
-                                                                                                        "Reset Fwd",
-                                                                                                        id="reset-fwd",
-                                                                                                        color="primary",
-                                                                                                        className="mt-3",
-                                                                                                        disabled=True,
-                                                                                                    ),
-                                                                                                    dbc.Button(
-                                                                                                        "Reset Rev",
-                                                                                                        id="reset-rev",
-                                                                                                        color="primary",
-                                                                                                        className="mt-3",
-                                                                                                        disabled=True,
-                                                                                                    ),
-                                                                                                    dbc.Button(
-                                                                                                        "Stop",
-                                                                                                        id="stop-step",
-                                                                                                        color="danger",
-                                                                                                        className="mt-3",
-                                                                                                        disabled=True,
-                                                                                                    ),
-                                                                                                ]
-                                                                                            ),
-                                                                                        ]
-                                                                                    ),
+                                                                                            [
+                                                                                                dbc.Col(
+                                                                                                        dbc.Button(
+                                                                                                            "Reset Forward",
+                                                                                                            id="reset-fwd",
+                                                                                                            color="primary",
+                                                                                                            className="mt-3",
+                                                                                                            disabled=False,
+                                                                                                        ),
+                                                                                                ),
+                                                                                                dbc.Col(
+                                                                                                        dbc.Button(
+                                                                                                            "Reset Reverse Rev",
+                                                                                                            id="reset-rev",
+                                                                                                            color="primary",
+                                                                                                            className="mt-3",
+                                                                                                            disabled=False,
+                                                                                                        ),
+                                                                                                ),
+                                                                                                dbc.Col(
+                                                                                                        dbc.Button(
+                                                                                                            "Stop Stepper",
+                                                                                                            id="stop-step",
+                                                                                                            color="danger",
+                                                                                                            className="mt-3",
+                                                                                                            disabled=False,
+                                                                                                        ),
+                                                                                                ),
+                                                                                            ]
+                                                                                        ),
                                                                                 ]
                                                                             )
                                                                         )
@@ -538,63 +528,7 @@ app.layout = dbc.Container(
                                                                             "marginBottom": 20
                                                                         },
                                                                     ),
-                                                                    html.H3(
-                                                                        "Reactor Config"
-                                                                    ),
-                                                                    dbc.Row(
-                                                                        dbc.Card(
-                                                                            dbc.CardBody(
-                                                                                [
-                                                                                    dbc.Row(
-                                                                                        [
-                                                                                            dbc.Label(
-                                                                                                "Reactor Configuration",
-                                                                                                className="col-form-label col-sm-4",
-                                                                                            ),
-                                                                                            dbc.Col(
-                                                                                                dcc.Upload(
-                                                                                                    id="upload-reactor-config",
-                                                                                                    children=html.Div(
-                                                                                                        [
-                                                                                                            "Drag and Drop or ",
-                                                                                                            html.A(
-                                                                                                                "Select a File"
-                                                                                                            ),
-                                                                                                        ]
-                                                                                                    ),
-                                                                                                    style={
-                                                                                                        "width": "100%",
-                                                                                                        "height": "60px",
-                                                                                                        "lineHeight": "60px",
-                                                                                                        "borderWidth": "1px",
-                                                                                                        "borderStyle": "dashed",
-                                                                                                        "borderRadius": "5px",
-                                                                                                        "textAlign": "center",
-                                                                                                        "margin": "10px",
-                                                                                                    },
-                                                                                                    multiple=False,
-                                                                                                    accept=".json",
-                                                                                                ),
-                                                                                                width=8,
-                                                                                            ),
-                                                                                        ],
-                                                                                        className="mb-3",
-                                                                                    ),
-                                                                                    dbc.Button(
-                                                                                        "Update Reactor",
-                                                                                        id="update-reactor",
-                                                                                        color="primary",
-                                                                                        className="mt-3",
-                                                                                        disabled=True,
-                                                                                    ),
-                                                                                    html.Div(
-                                                                                        id="output-reactor-config"
-                                                                                    ),
-                                                                                ]
-                                                                            ),
-                                                                        )
-                                                                    ),
-                                                                ]
+                                                            ]
                                                             ),
                                                         ],
                                                     ),
@@ -603,8 +537,51 @@ app.layout = dbc.Container(
                                         ]
                                     ),
                                 ),
+                                dbc.Row(
+                                    id="log-row",
+                                    style={
+                                        "display": "none"
+                                    },
+                                    children=[
+                                        html.Div(
+                                            html.P(),
+                                            style={
+                                                "marginBottom": 20
+                                            },
+                                        ),
+                                        html.H3(
+                                            "Reactor Status ",
+                                        ),
+                                        dbc.Card(
+                                            dbc.CardBody(
+                                                [
+                                                    html.Div(
+                                                        [
+                                                            dcc.Textarea(
+                                                                id="textarea-mqtt-status",
+                                                                value="",
+                                                                className="custom-textarea",
+                                                                readOnly=True,
+                                                            ),
+                                                            html.Div(
+                                                                id="textarea-state-example-output",
+                                                                style={
+                                                                    "whiteSpace": "pre-line"
+                                                                },
+                                                            ),
+                                                        ]
+                                                    )
+                                                ],
+                                            )
+                                        ),
+                                    ],
+                                ),
+                                ],
+                                
+                                                                    
                                 width=12,
                             ),
+                    
                             className="g-0",
                         ),
                     ],
@@ -841,30 +818,6 @@ def update_experiment_config(n_clicks, contents, reactor_id, experiment_id, is_o
     return is_open
 
 
-# Callback to handle the upload and update of the reactor configuration file
-@app.callback(
-    Output("output-reactor-config", "children"),
-    Input("update-reactor", "n_clicks"),
-    State("upload-reactor-config", "contents"),
-    State("reactor-id", "children"),
-    State("experiment-id", "children"),
-    prevent_initial_call=True,
-)
-def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
-    if n_clicks is not None and contents is not None:
-        content_type, content_string = contents.split(",")
-        decoded = base64.b64decode(content_string)
-        json_data = json.loads(decoded.decode("utf-8"))
-        update_experiment_command(
-            reactor_id=reactor_id,
-            experiment_id=experiment_id,
-            experiment_config=json_data,
-        )
-
-        return html.Div(["Reactor configuration updated."])
-    return no_update
-
-
 # Callback to update the forms based on the selected reactor ID
 @app.callback(
     [
@@ -875,7 +828,6 @@ def update_reactor_config(n_clicks, contents, reactor_id, experiment_id):
         Output("experiment-status", "children"),
         Output("reactor-id", "children"),
         Output("reactor-name", "children"),
-        Output("network-id", "children"),
         Output("start-experiment", "disabled"),
         Output("pause-experiment", "disabled"),
         Output("stop-experiment", "disabled"),
@@ -903,7 +855,6 @@ def update_forms(reactor_id, n_clicks):
             exp_status,  # experiment Status
             reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_name,
-            reactor_ip,  
             not exp_name, # disable start button
             not exp_name, # disable pause button
             not exp_name, # disable stop button
@@ -912,7 +863,7 @@ def update_forms(reactor_id, n_clicks):
             not reactor_name,  # disable stepper stop
         ]
     else:
-        return [no_update] * 14
+        return [no_update] * 13
 
 
 # Callback for the Start button
@@ -977,46 +928,40 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
 
 @app.callback(Output("stepper-label", "children"), Input("stepper-slider", "value"))
 def update_stepper_target_volume(value):
-    return 'Stepper Volume ("{}")'.format(value)
+    return 'Stepper Volume:  {}mL'.format(value)
 
 
 # Callback for the reset stepper fwd
 @app.callback(
     [
         State("reactor-id", "children"),
-        Input("stepper-slider", "value"),
+        State("stepper-slider", "value"),
         Input("reset-fwd", "n_clicks"),
     ]
 )
 def reset_stepper_fwd(reactor_id, stepper_volume, n_clicks):
     if n_clicks:
-        reset_stepper(reactor_id, "stepper_forward", stepper_volume)
-
-    return no_update
+        send_command(reactor_id, "stepper_forward", stepper_volume=stepper_volume)
 
 
 # Callback for the reset stepper reverse
 @app.callback(
     [
         State("reactor-id", "children"),
-        Input("stepper-slider", "value"),
+        State("stepper-slider", "value"),
         Input("reset-rev", "n_clicks"),
     ]
 )
 def reset_stepper_reverse(reactor_id, stepper_volume, n_clicks):
     if n_clicks:
-        reset_stepper(reactor_id, "stepper_reverse", stepper_volume)
-
-    return no_update
-
+        send_command(reactor_id, "stepper_reverse", stepper_volume=stepper_volume)
 
 # Callback for the reset stepper stop
 @app.callback([State("reactor-id", "children"), Input("stop-step", "n_clicks")])
 def reset_stepper_stop(reactor_id, n_clicks):
     if n_clicks:
-        reset_stepper(reactor_id, "stepper_stop")
+        send_command(reactor_id, "stepper_stop")
 
-    return no_update
 
 @atexit.register
 def disconnect_from_mqtt():

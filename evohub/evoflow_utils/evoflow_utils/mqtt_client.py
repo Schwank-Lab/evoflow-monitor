@@ -23,8 +23,8 @@ class MqttClient:
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
             client_id,
-            clean_session=True
-        )
+            clean_session=True,
+         )
         self.client.enable_logger(logger)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
@@ -58,7 +58,7 @@ class MqttClient:
             self.logger.error(e, exc_info=True)
             return
         
-        self.logger.info(f"Message on topic {topic} with data {data}")
+        self.logger.debug(f"Message on topic {topic} with data {data}")
         for handler in self.topics_handlers.get(msg.topic, []):
             try: 
                 handler(data)

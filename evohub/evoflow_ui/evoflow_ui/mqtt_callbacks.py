@@ -11,10 +11,10 @@ from evoflow_utils.config import Config
 from evoflow_utils.mqtt_client import MqttClient
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)  # Set the logging level for the console handler
+console_handler.setLevel(logging.INFO)  # Set the logging level for the console handler
 
 # Optionally, set a formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -22,8 +22,6 @@ console_handler.setFormatter(formatter)
 
 # Add the handler to the logger
 logger.addHandler(console_handler)
-
-
 
 
 class ReactorStateListener:
@@ -46,16 +44,16 @@ class ReactorStateListener:
         return last_state 
 
     def on_reactor_state(self, reactor_state):
-        print(f"Received reactor state: {reactor_state}")
+        logger.debug(f"Received reactor state: {reactor_state}")
         if 'reactor_id' not in reactor_state.keys():
-            print('Recived a reactor state with not reactor_id')
+            logger.debug('Recived a reactor state with not reactor_id')
             return
         self._reactor_states[reactor_state['reactor_id']] = (datetime.now(), reactor_state)
 
 reactor_state_listener = ReactorStateListener()
 
 mqtt_client = MqttClient(
-    'evoflow_ui',
+    'evoflow_ui_local_' + str(datetime.now()),
     str(Config.MQTT_HOST),
     int(Config.MQTT_PORT),
     logger=logger, 
@@ -93,10 +91,6 @@ def new_experiment_command(reactor_id: int, name: str, experiment_config: json):
     experiment_id = save_experiment_command_on_db(reactor_id, name, experiment_config)
 
     send_command(reactor_id, "new_experiment", experiment_id=experiment_id, experiment_config=experiment_config)
-
-
-def reset_stepper(reactor_id, command, stepper_volume=None):
-    send_command(reactor_id, command, stepper_volume=stepper_volume)
 
 def get_reactor_state(reactor_id):
     return reactor_state_listener.get_last_reactor_state(reactor_id)
