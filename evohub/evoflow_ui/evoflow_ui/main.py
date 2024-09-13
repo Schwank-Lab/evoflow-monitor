@@ -50,33 +50,35 @@ new_exp_modal =  dbc.Modal(
                                         [
                                             dbc.Label(
                                                 "Experiment Configuration",
-                                                className="col-form-label col-sm-4",
+                                                className="col-form-label col-sm-12",
                                             ),
+                                           
+                                        ],
+                                        className="mb-3",
+                                    ),
+                                    dbc.Row(
+                                        [
                                             dbc.Col(
-                                                dcc.Upload(
-                                                    id="upload-new-exp-config",
-                                                    children=html.Div(
-                                                        [
-                                                            "Drag and Drop or ",
-                                                            html.A(
-                                                                "Select a File"
-                                                            ),
-                                                        ]
-                                                    ),
-                                                    style={
-                                                        "width": "100%",
-                                                        "height": "60px",
-                                                        "lineHeight": "60px",
-                                                        "borderWidth": "1px",
-                                                        "borderStyle": "dashed",
-                                                        "borderRadius": "5px",
-                                                        "textAlign": "center",
-                                                        "margin": "10px",
-                                                    },
-                                                    multiple=False,
-                                                    accept=".json",
+                                                dcc.Textarea(
+                                                    id="new-experiment-config-text",
+                                                    value="",
+                                                    className="custom-textarea",
                                                 ),
-                                                width=8,
+                                                width=12,
+                                            ),
+                                        ],
+                                        className="mb-3",
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Alert(
+                                                    id="new-config-error-message",
+                                                    color="danger",
+                                                    is_open=False,  # Hide initially
+                                                    dismissable=False,
+                                                ),
+                                                width=12,
                                             ),
                                         ],
                                         className="mb-3",
@@ -127,33 +129,35 @@ update_exp_modal =  dbc.Modal(
                                         [
                                             dbc.Label(
                                                 "Experiment Configuration",
-                                                className="col-form-label col-sm-4",
+                                                className="col-form-label col-sm-12",
                                             ),
+                                           
+                                        ],
+                                        className="mb-3",
+                                    ),
+                                    dbc.Row(
+                                        [
                                             dbc.Col(
-                                                dcc.Upload(
-                                                    id="upload-update-exp-config",
-                                                    children=html.Div(
-                                                        [
-                                                            "Drag and Drop or ",
-                                                            html.A(
-                                                                "Select a File"
-                                                            ),
-                                                        ]
-                                                    ),
-                                                    style={
-                                                        "width": "100%",
-                                                        "height": "60px",
-                                                        "lineHeight": "60px",
-                                                        "borderWidth": "1px",
-                                                        "borderStyle": "dashed",
-                                                        "borderRadius": "5px",
-                                                        "textAlign": "center",
-                                                        "margin": "10px",
-                                                    },
-                                                    multiple=False,
-                                                    accept=".json",
+                                                dcc.Textarea(
+                                                    id="update-experiment-config-text",
+                                                    value="",
+                                                    className="custom-textarea",
                                                 ),
-                                                width=8,
+                                                width=12,
+                                            ),
+                                        ],
+                                        className="mb-3",
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dbc.Alert(
+                                                    id="update-config-error-message",
+                                                    color="danger",
+                                                    is_open=False,  # Hide initially
+                                                    dismissable=False,
+                                                ),
+                                                width=12,
                                             ),
                                         ],
                                         className="mb-3",
@@ -176,6 +180,7 @@ update_exp_modal =  dbc.Modal(
 # Define the layout of the app
 app.layout = dbc.Container(
     [
+        dcc.Store(id="trigger-update-forms", data=True),
         dcc.Interval(
             id="interval-component",
             interval=2.5 * 1000,  # Update every 5 seconds
@@ -350,45 +355,6 @@ app.layout = dbc.Container(
                                                                             ),
                                                                         ),
                                                                     ),
-                                                                    dbc.Row(
-                                                                        id="log-row",
-                                                                        style={
-                                                                            "display": "none"
-                                                                        },
-                                                                        children=[
-                                                                            html.Div(
-                                                                                html.P(),
-                                                                                style={
-                                                                                    "marginBottom": 20
-                                                                                },
-                                                                            ),
-                                                                            html.H3(
-                                                                                "Reactor Status ",
-                                                                            ),
-                                                                            dbc.Card(
-                                                                                dbc.CardBody(
-                                                                                    [
-                                                                                        html.Div(
-                                                                                            [
-                                                                                                dcc.Textarea(
-                                                                                                    id="textarea-mqtt-status",
-                                                                                                    value="",
-                                                                                                    className="custom-textarea",
-                                                                                                    readOnly=True,
-                                                                                                ),
-                                                                                                html.Div(
-                                                                                                    id="textarea-state-example-output",
-                                                                                                    style={
-                                                                                                        "whiteSpace": "pre-line"
-                                                                                                    },
-                                                                                                ),
-                                                                                            ]
-                                                                                        )
-                                                                                    ],
-                                                                                )
-                                                                            ),
-                                                                        ],
-                                                                    ),
                                                                     html.Div(
                                                                         id="output-exp-config"
                                                                     ),
@@ -460,24 +426,24 @@ app.layout = dbc.Container(
                                                                                 [
                                                                                     dbc.Row(
                                                                                         [
-                                                                                            dbc.Label(
-                                                                                                "Stepper Volume",
-                                                                                                id="stepper-label",
-                                                                                                className="col-form-label col-sm-4",
-                                                                                            ),
-                                                                                            html.Div(
-                                                                                                html.P(),
-                                                                                                style={
-                                                                                                    "marginBottom": 5
-                                                                                                },
-                                                                                            ),
-                                                                                            dcc.Slider(
-                                                                                                min=0,
-                                                                                                max=80,
-                                                                                                step=5,
-                                                                                                value=10,
-                                                                                                id="stepper-slider",
-                                                                                                marks=None,
+                                                                                            dbc.Col(
+                                                                                                [
+                                                                                                    dbc.Label(
+                                                                                                        "Stepper Volume (mL): ",
+                                                                                                        id="stepper-label",
+                                                                                                        className="col-form-label col-sm-6",
+                                                                                                    ),
+                                                                                                
+                                                                                                    dcc.Input(
+                                                                                                        type='number',
+                                                                                                        min=0,            # Minimum value
+                                                                                                        max=80,           # Maximum value
+                                                                                                        step=5,           # Step size
+                                                                                                        value=10,         # Default value
+                                                                                                        id="stepper-volume",
+                                                                                                        debounce=True,    # Optional: adds a delay before updating the value (to prevent rapid updates)
+                                                                                                    ),
+                                                                                                ]
                                                                                             ),
                                                                                         ]
                                                                                     ),
@@ -500,7 +466,7 @@ app.layout = dbc.Container(
                                                                                                 ),
                                                                                                 dbc.Col(
                                                                                                         dbc.Button(
-                                                                                                            "Reset Reverse Rev",
+                                                                                                            "Reset Reverse",
                                                                                                             id="reset-rev",
                                                                                                             color="primary",
                                                                                                             className="mt-3",
@@ -612,6 +578,8 @@ app.layout = dbc.Container(
 )
 
 
+
+
 @app.callback(
     Output("textarea-mqtt-status", "value"),
     Input("interval-component", "n_intervals"),
@@ -658,22 +626,6 @@ def show_experiment_staus(reactor_id, style):
     prevent_initial_call=True,
 )
 def create_iframe_url(reactor_name, experiment_name):
-    # if reactor_name and experiment_name:
-    #     return html.Iframe(
-    #         id="iframe",
-    #         src=(
-    #             "http://10.66.4.7:3000/d/bdp9pr3doijnkc"
-    #             f"?reactor_name={reactor_name}"
-    #             f"&experiment_name={experiment_name}"
-    #             "&update_interval=30s"
-    #             # "&kiosk"
-    #         ),
-    #         style={
-    #             "width": "100%",
-    #             "height": "900px",
-    #             "border": "none",
-    #         },
-    #     )
     return html.Img(
         src="./assets/Asset 1.png",
         style={
@@ -695,33 +647,25 @@ def get_reactor_ids(n_clicks):
 
 @app.callback(
     Output("modal-new-exp", "is_open"),
-    [Input("open-new-exp-modal", "n_clicks"), Input("save-new-exp", "n_clicks")],
-    [State("modal-new-exp", "is_open")],
+    Input("open-new-exp-modal", "n_clicks"),
+    State("modal-new-exp", "is_open"),
 )
-def toggle_new_experiment_modal(open_new_exp_modal, save_new_exp, is_open):
-    print('Toggle new experiment modal')
-    if open_new_exp_modal:
-        return True
-    elif save_new_exp:
-        return False
-    else:
-        return is_open 
+def open_new_experiment_modal(open_new_exp_modal, is_open):
+    should_open = True if open_new_exp_modal else is_open
+    print('Opening new experiment modal', should_open)
+    return should_open
     
 
 @app.callback(
     Output("modal-update-exp", "is_open"),
-    [Input("open-update-exp-modal", "n_clicks"), Input("update-exp", "n_clicks")],
+    Input("open-update-exp-modal", "n_clicks"),
     [State("modal-update-exp", "is_open")],
 )
-def toggle_update_experiment_modal(open_update_exp_modal, update_exp, is_open):
-    print('Toggle new experiment modal')
-    if open_update_exp_modal:
-        return True
-    elif update_exp:
-        return False
-    else:
-        return is_open 
-    
+def open_update_experiment_modal(open_update_exp_modal, is_open):
+    should_open = True if open_update_exp_modal else is_open
+    print('Opening update experiment modal: ', should_open)
+    return should_open
+
 
 @app.callback(
     [Output("open-update-exp-modal", "disabled")],
@@ -732,27 +676,6 @@ def toggle_update_experiment_modal(open_update_exp_modal, update_exp, is_open):
 def enbale_update_experiment(reactor_id, experiment_status):
     print('Experiment status updated, new status = ', experiment_status)
     return [not reactor_id or experiment_status in {None, 'start', 'stop'}]
-
-@app.callback(
-    [
-        Output("upload-new-exp-config", "children", allow_duplicate=True),
-    ],
-    Input("upload-new-exp-config", "contents"),
-    State("upload-new-exp-config", "filename"),
-    prevent_initial_call="initial_duplicate",
-)
-def on_upload_new_experiment_config(contents, filename):
-    print(f'Uploaded new experiment config: {filename}')
-    if contents is not None:
-        return [
-            html.Div(
-                [
-                    html.I(className="fas fa-file"),  # FontAwesome file icon
-                    html.Span(f" {filename}"),
-                ]
-            ),
-        ]
-    return [no_update]
 
 
 @app.callback(
@@ -765,58 +688,127 @@ def enbale_create_new_experiment(reactor_id, experiment_status):
     print('Experiment status updated, new status = ', experiment_status)
     return [not reactor_id or experiment_status == 'start' or experiment_status == 'pause']
 
+def validate_experiment_config(exp_config_text):
+    config = json.loads(exp_config_text)
+    # Define expected field types and constraints
+    required_fields = {
+        "inc_left": {
+            "use": bool,
+            "target_od": float,
+            "target_temp": float
+        },
+        "inc_right": {
+            "use": bool,
+            "target_od": float,
+            "target_temp": float
+        },
+        "lagoon": {
+            "target_temp": float,
+            "volume": float,
+            "flow_rate": float,
+            "inc_left_frac": float,
+            "inc_right_frac": float,
+            "arabinose_stock_concentration": float,
+            "arabinose_target_concentration": float
+        }
+    }
+    
+    # Define constraints
+    constraints = {
+        "target_od": (0, 1),  
+        "target_temp": (0, 100),  
+        "volume": (0, 8),  
+        "flow_rate": (0, 4), 
+        "inc_left_frac": (0, 1), 
+        "inc_right_frac": (0, 1),
+        "arabinose_stock_concentration": (0, None), 
+        "arabinose_target_concentration": (0, None)
+    }
+    
+    def check_constraints(field, value):
+        if field in constraints:
+            min_val, max_val = constraints[field]
+            if (min_val is not None and value < min_val) or (max_val is not None and value > max_val):
+                raise ValueError(f"{field} value {value} is out of range")
+    
+    # Validate the fields
+    for section, fields in required_fields.items():
+        if section not in config:
+            raise ValueError(f"Missing section: {section}")
+        for field, expected_type in fields.items():
+            if field not in config[section]:
+                raise ValueError(f"Missing field '{field}' in section '{section}'")
+            value = config[section][field]
+            if not isinstance(value, (expected_type, int)):
+                raise ValueError(f"Field '{field}' in section '{section}' should be of type {expected_type.__name__}")
+            check_constraints(field, value)
+            
+    return config
+        
 
 # Callback to handle saving a new experiment
 @app.callback(
-    Output("modal-new-exp", "is_open", allow_duplicate=True),
+    [
+        Output("modal-new-exp", "is_open", allow_duplicate=True),
+        Output("new-config-error-message", "is_open"),
+        Output("new-config-error-message", "children"),
+        Output("trigger-update-forms", "data"),
+    ],
     Input("save-new-exp", "n_clicks"),
     State("new-exp-name", "value"),
-    State("upload-new-exp-config", "contents"),
+    State("new-experiment-config-text", "value"),
     State("reactor-id", "children"),
     State("modal-new-exp", "is_open"),
     prevent_initial_call=True,
 )
-def save_new_experiment(n_clicks, new_exp_name, contents, reactor_id, is_open):
-    if n_clicks and new_exp_name and contents and reactor_id:
+def save_new_experiment(n_clicks, new_exp_name, exp_config_text, reactor_id, is_open):
+    if n_clicks:
         print('Saving new experiment')
-        print('Experiment config:', contents)
-        content_type, content_string = contents.split(",")
-        decoded = base64.b64decode(content_string)
-        experiment_config = json.loads(decoded.decode("utf-8"))
-
-        new_experiment_command(
-            reactor_id=reactor_id,
-            name=new_exp_name,
-            experiment_config=experiment_config,
-        )
-        return False
-
-    return is_open
+        if not new_exp_name:
+            return is_open, True, "Specify experiment name"
+        try: 
+            print('Validating experiment config: ', exp_config_text)
+            experiment_config = validate_experiment_config(exp_config_text)
+            new_experiment_command(
+                reactor_id=reactor_id,
+                name=new_exp_name,
+                experiment_config=experiment_config,
+            )
+            return False, False, "", True
+        except Exception as e:
+            return True, True, str(e), False
+    return is_open, False, "", False
 
 
 # Callback to handle the upload and update of the experiment configuration file
 @app.callback(
-    Output("modal-update-exp", "is_open", allow_duplicate=True),
+    [
+        Output("modal-update-exp", "is_open", allow_duplicate=True),
+        Output("update-config-error-message", "is_open"),
+        Output("update-config-error-message", "children"),
+    ],
     Input("update-exp", "n_clicks"),
-    State("upload-update-exp-config", "contents"),
+    State("update-experiment-config-text", "value"),
     State("reactor-id", "children"),
     State("experiment-id", "children"),
     State("modal-update-exp", "is_open"),
     prevent_initial_call=True,
 )
-def update_experiment_config(n_clicks, contents, reactor_id, experiment_id, is_open):
-    if n_clicks is not None and contents is not None:
-        content_type, content_string = contents.split(",")
-        decoded = base64.b64decode(content_string)
-        json_data = json.loads(decoded.decode("utf-8"))
-        update_experiment_command(
-            reactor_id=reactor_id,
-            experiment_id=experiment_id,
-            experiment_config=json_data,
-        )
-        return False
-    return is_open
-
+def update_experiment_config(n_clicks, exp_config_text, reactor_id, experiment_id, is_open):
+    if n_clicks:
+        print('Updating experiment')
+        try: 
+            print('Validating experiment config: ', exp_config_text)
+            experiment_config = validate_experiment_config(exp_config_text)
+            update_experiment_command(
+                reactor_id=reactor_id,
+                experiment_id=experiment_id,
+                experiment_config=experiment_config,
+            )
+            return False, False, "",
+        except Exception as e:
+            return True, True, str(e)
+    return is_open, False, ""
 
 # Callback to update the forms based on the selected reactor ID
 @app.callback(
@@ -826,6 +818,8 @@ def update_experiment_config(n_clicks, contents, reactor_id, experiment_id, is_o
         Output("update-exp-name", "children"),
         Output("experiment-datetime", "children"),
         Output("experiment-status", "children"),
+        Output("new-experiment-config-text", "value"),
+        Output("update-experiment-config-text", "value"),
         Output("reactor-id", "children"),
         Output("reactor-name", "children"),
         Output("start-experiment", "disabled"),
@@ -835,16 +829,17 @@ def update_experiment_config(n_clicks, contents, reactor_id, experiment_id, is_o
         Output("reset-rev", "disabled"),
         Output("stop-step", "disabled"),
     ],
-    [Input("reactor-id-dropdown", "value"), Input("save-new-exp", "n_clicks")],
+    [Input("reactor-id-dropdown", "value"), Input("trigger-update-forms", "data")],
 )
-def update_forms(reactor_id, n_clicks):
+def update_forms(reactor_id, trigger_update_forms):
     print("Selected reactor id: ", reactor_id)
-    if reactor_id:
+    if reactor_id and trigger_update_forms:
         print('Fetching reactor and experiment data')
         reactor_data, experiment_data = get_reactor_experiment_data(reactor_id)
         print('Reactor data received:',  reactor_data)
         print('Experiment data received:', experiment_data)
-        exp_id, exp_name, exp_start, exp_status = experiment_data
+        exp_id, exp_name, exp_start, exp_status, exp_config = experiment_data
+        exp_config = json.loads(exp_config) if exp_config else None
         exp_id = exp_id if exp_id else "N/A"
         reactor_name, reactor_ip = reactor_data
         return [
@@ -853,6 +848,8 @@ def update_forms(reactor_id, n_clicks):
             exp_name,  # update experiment name
             exp_start,  # experiment Date Time
             exp_status,  # experiment Status
+            json.dumps(exp_config, indent=4),  # experiment config
+            json.dumps(exp_config, indent=4),  # experiment config
             reactor_id,  # Reactor ID (from dropdown, same as input)
             reactor_name,
             not exp_name, # disable start button
@@ -863,7 +860,7 @@ def update_forms(reactor_id, n_clicks):
             not reactor_name,  # disable stepper stop
         ]
     else:
-        return [no_update] * 13
+        return [no_update] * 15
 
 
 # Callback for the Start button
@@ -926,16 +923,11 @@ def pause_experiment(n_clicks, reactor_id, experiment_id):
     return no_update
 
 
-@app.callback(Output("stepper-label", "children"), Input("stepper-slider", "value"))
-def update_stepper_target_volume(value):
-    return 'Stepper Volume:  {}mL'.format(value)
-
-
 # Callback for the reset stepper fwd
 @app.callback(
     [
         State("reactor-id", "children"),
-        State("stepper-slider", "value"),
+        State("stepper-volume", "value"),
         Input("reset-fwd", "n_clicks"),
     ]
 )
@@ -948,7 +940,7 @@ def reset_stepper_fwd(reactor_id, stepper_volume, n_clicks):
 @app.callback(
     [
         State("reactor-id", "children"),
-        State("stepper-slider", "value"),
+        State("stepper-volume", "value"),
         Input("reset-rev", "n_clicks"),
     ]
 )

@@ -40,7 +40,9 @@ def pull_experiment_data(reactor_id):
                 Experiment.name,
                 Experiment.inserted_at,
                 Experiment.status,
+                ExperimentConfig.exp_config_json 
             )
+            .join(ExperimentConfig, Experiment.experiment_id == ExperimentConfig.experiment_id)
             .where(Experiment.reactor_id == reactor_id)
             .order_by(Experiment.status, Experiment.inserted_at.desc())
         )
@@ -56,7 +58,7 @@ def get_reactor_experiment_data(reactor_id):
     
     experiment_data = pull_experiment_data(reactor_id)
     print(f'db_callbacks#get_reactor_experiment_data experiment_data(reactor_id={reactor_id}): {experiment_data}')
-    experiment_data = experiment_data if experiment_data else (None, None, None, None)
+    experiment_data = experiment_data if experiment_data else (None, None, None, None, None)
     
     return reactor_data, experiment_data
     
