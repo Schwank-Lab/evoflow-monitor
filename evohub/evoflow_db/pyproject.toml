@@ -1,16 +1,20 @@
-[tool.poetry]
+[project]
 name = "evoflow_db"
 version = "0.1.15"
 description = ""
-authors = ["graziano <myemail@mysite.com>"]
+authors = [
+    { name = "graziano", email = "myemail@mysite.com" }
+]
 readme = "README.md"
+requires-python = "^3.12"
+dependencies = [
+    "sqlalchemy >=2.0.30,<3.0.0",
+    "psycopg2-binary >=2.9.9,<3.0.0"
+]
 
 [tool.poetry.dependencies]
-python = "^3.11"
 evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
-sqlalchemy = "^2.0.30"
-psycopg2-binary = "^2.9.9"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

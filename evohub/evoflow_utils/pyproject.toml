@@ -1,15 +1,19 @@
-[tool.poetry]
+[project]
 name = "evoflow-utils"
 version = "0.1.1"
 description = ""
-authors = ["graziano <myemail@mysite.com>"]
+authors = [
+    { name = "graziano", email = "myemail@mysite.com" }
+]
 readme = "README.md"
+requires-python = "^3.12"
 
 [tool.poetry.dependencies]
-python = "^3.11"
 python-dotenv = "^1.0.1"
 
+[tool.poetry]
+requires-poetry = ">=2.0.0,<3.0.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

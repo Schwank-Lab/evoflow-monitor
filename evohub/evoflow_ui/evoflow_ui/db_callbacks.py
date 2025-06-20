@@ -40,7 +40,7 @@ def pull_experiment_data(reactor_id):
                 Experiment.name,
                 Experiment.inserted_at,
                 Experiment.status,
-                ExperimentConfig.exp_config_json 
+                    ExperimentConfig.exp_config_json 
             )
             .join(ExperimentConfig, Experiment.experiment_id == ExperimentConfig.experiment_id)
             .where(Experiment.reactor_id == reactor_id)
