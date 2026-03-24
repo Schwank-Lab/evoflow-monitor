@@ -56,8 +56,3 @@ volumes:
       o: bind
       device: /home/evohub/data/postgres
   grafana:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/evohub/data/grafana
