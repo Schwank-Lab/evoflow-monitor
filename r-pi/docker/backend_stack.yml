@@ -33,6 +33,7 @@ services:
     hostname: grafana
     container_name: grafana
     restart: always
+    user: "0"
     environment:
       GF_SECURITY_ALLOW_EMBEDDING: True
       GF_SECURITY_ADMIN_USER: admin
@@ -41,6 +42,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana:/var/lib/grafana
+    depends_on:
+      - postgres
     
 volumes:
   mosquitto:
