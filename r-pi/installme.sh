@@ -56,6 +56,19 @@ sudo apt-get install -y docker  docker-compose
 sudo usermod -aG docker $USER
 # Note: After adding the user to the Docker group, you would need to log out and back in for this to take effect.
 
+# Configure Docker log rotation to prevent disk from filling up
+print_green "Configuring Docker log rotation..."
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "50m",
+    "max-file": "3"
+  }
+}
+EOF
+
 print_green "Docker installation complete!"
 
 print_green "Making sure SSH agent runs on startup..."
