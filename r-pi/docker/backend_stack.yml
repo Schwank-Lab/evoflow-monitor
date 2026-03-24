@@ -29,7 +29,7 @@ services:
       - "5432:5432"
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.4.1
     hostname: grafana
     container_name: grafana
     restart: always
@@ -56,3 +56,8 @@ volumes:
       o: bind
       device: /home/evohub/data/postgres
   grafana:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/evohub/data/grafana
