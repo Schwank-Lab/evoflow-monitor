@@ -1,0 +1,7 @@
+hostapd
+dnsmasq
+iptables
+dhcpcd5
+ca-certificates
+curl
+rfkill

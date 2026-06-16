@@ -1,247 +1,268 @@
 # EvoHub Image-Based Deployment — Plan
 
-Status: **draft / proposal** · Branch: `image-based-deployment`
+Status: **draft / proposal (v2)** · Branch: `image-based-deployment`
+
+> v2 changes from v1: dropped Ansible (shell build instead); service configs use
+> the existing **public defaults** baked into the image, so credential
+> **injection is now optional**, not a core pillar; **hub-as-AP** is the baseline
+> topology; **mDNS dropped** (users access by IP, as today). See the changelog at
+> the bottom.
 
 ## 0. Goal
 
-A non-technical user (a biologist) can bring up a complete, working EvoHub with
-**no monitor, no keyboard, no copy-paste, and no shell commands they have to
-understand** — ideally driven end-to-end by Claude Code on their laptop. The
-mechanism is a **pre-baked SD-card image** (identical for every lab) plus
-**injection of credentials / site config at first boot** (the only per-lab part).
+A non-technical user (a biologist) brings up a complete, working EvoHub with **no
+monitor, no keyboard, no copy-paste, and no shell commands** — from a **pre-baked
+SD-card image** that boots straight into a running hub.
 
-Target end-user flow:
+Key simplification settled during design: because every service uses
+**non-sensitive public defaults** (there is no sensitive data anywhere) and the
+hub runs **its own network**, the image is **fully self-contained** — in the
+common case there is **nothing to inject**. An *optional* file on the boot
+partition covers the few deviations (Wi-Fi uplink, custom AP name, hostname).
+
+End-user flow:
 
 1. Insert the SD card, plug the Pi into **ethernet + power**.
-2. Run Claude Code, say "set up my EvoHub".
-3. Answer ~2 prompts (Wi-Fi name/password for the reactor network).
+2. *(optional)* drop an `evohub.conf` on the boot partition for any overrides.
+3. Power on — the hub comes up on its own Wi-Fi + the dashboards.
 
-Everything else — flashing, config injection, service bring-up, health checks —
-is automated.
+A Claude Code skill can additionally drive the flashing and verify the result,
+but the image works on its own.
 
-### Non-goals (for this iteration)
+### Non-goals (this iteration)
 
 - Multi-hub fleet orchestration / central management.
-- The experimental **MinIO** and **Prefect** stacks (out of scope; not shipped).
-- Auto-migrating the existing live hub at `10.66.4.7` (handled separately).
+- The experimental **MinIO** and **Prefect** stacks (not shipped).
+- Auto-migrating the existing live hub at the lab (handled separately).
 
 ## 1. Where we are today (grounded reality)
 
 The current README flow needs a monitor at first boot, manual `apt`/Docker
-install, an external USB HDD, and Portainer copy-paste. But a lot of automation
-already exists in branches and should be **reused, not rebuilt**:
+install, an external USB HDD, and Portainer copy-paste. Useful prior art exists
+but is **abandoned WIP** — mine it for the *steps*, don't adopt the tooling:
 
-| Prior art | Branch | What it gives us | State |
+| Prior art | Branch | Salvage value | State |
 |---|---|---|---|
-| Ansible roles | `refactor-playbooks-into-roles` | `apt`, `docker`, `github`, `clone`, `build_evohub_images`, `portainer`, `install_lab` | WIP; `build_evohub_images` broken (empty `ssh_private_key`, var-name mismatch) |
-| USB mount + `docker compose up` | `14-use-ansible-to-deploy-evohub-monitor-stack` | `install_docker_stack.yml`: auto-mounts USB, creates data dirs, `docker compose up -d` | works; already off Portainer-paste |
-| Portainer-API deploy + `.secrets` | `14-…` | `deploy_{backend,monitor}_stack.sh` source creds from a `.secrets` file | precursor to cred injection |
-| Docker log rotation | `claude/keen-maxwell` (Mar 2026) | `daemon.json` (50 MB ×3) in `installme.sh` | **must bake in** |
+| Ansible roles | `refactor-playbooks-into-roles` | the exact install steps (apt deps, Docker, GitHub key, clone, Portainer) | abandoned, ~2 yrs old, never merged; `build_evohub_images` broken |
+| USB mount + `docker compose up` | `14-use-ansible-…` | USB auto-mount logic; already off Portainer-paste | abandoned WIP |
+| Docker log rotation | `claude/keen-maxwell` (Mar 2026) | `daemon.json` (50 MB ×3) | **bake in** |
+
+**Ansible is not used anywhere on `main`** and the live hub was set up by hand —
+so we treat Ansible as a reference, not a foundation, and build with plain shell.
 
 ### Reality gaps to fix along the way
 
-- **Secrets committed in cleartext**: `evoflow_utils/.env` (`DB_PASS=postgres`,
-  `MQTT_PASS=service_pass`), `backend_stack.yml` (`POSTGRES_PASSWORD=postgres`,
-  `GF_SECURITY_ADMIN_PASSWORD=veryhungryphage`), `minio_stack.yml`
-  (`hungryphage`), `prefect_stack.yml` (AWS-style keys), README AP passphrase
-  `cicciociccio`, reactor `evo-net`/`hungryphage`. All must move to first-boot
-  generation; the live ones must be rotated.
-- **Four different network numbers** drift across the repo (`10.66.4.x`,
-  `192.168.31.x`, `192.168.1.x`, `172.16.0.x`) — collapse to one source of truth
-  (`evohub.local` + injected config).
-- **External-HD assumption is stale**: the log-rotation incident shows data
-  lives on a 29 GB SD card, not the `~/data` external disk the README assumes.
-- **Python 3.11 base vs `>=3.12` deps**; **mosquitto volume triple-mount bug**
-  (one named volume mounted at config/data/log); **AP is documented but never
-  deployed** (the hub is currently a Wi-Fi client of a separate router).
+- **Stale external-HD assumption**: the log-rotation incident (15 GB of logs
+  filled a 29 GB SD card and broke Grafana) shows data lives on the SD card, not
+  the `~/data` external disk the README assumes.
+- **Four network numbers** drift across the repos (`10.66.4.x`, `192.168.31.x`,
+  `192.168.1.x`, `172.16.0.x`) — collapse to one model (below).
+- **Hub-internal services point at the hub's own external IP** (`.env`
+  `DB_HOST`/`MQTT_HOST = 10.66.4.7`) — a portability bug; must use compose
+  service names.
+- **mosquitto volume triple-mount bug** (one named volume at config/data/log);
+  **Python 3.11 base vs `>=3.12` deps**; **AP is documented but never deployed**
+  (the hub is currently a Wi-Fi *client* of a separate router).
+
+> Note: committed service passwords are **intentionally kept** — they are
+> non-sensitive public defaults by the project's own call. The `.env` change
+> below is about *correctness/portability* (don't route to yourself via an
+> external IP), not secrecy.
 
 ## 2. Target architecture (end state)
 
 A **one-box appliance**:
 
 - Pi runs **backend** (Postgres, Mosquitto, Grafana) + **apps** (listener, UI)
-  via a single `docker compose` stack under a **systemd** unit (`restart: always`,
-  survives reboot). No Portainer required.
-- **Networking (recommended): hub is its own Wi-Fi AP** (`hostapd` + `dnsmasq`
-  on onboard `wlan0`) for the reactor "local" network, with **ethernet uplink**
-  for internet/"global". The reactors join the hub's AP; the laptop reaches the
-  hub at `evohub.local`. A USB Wi-Fi dongle is only needed if a given site has
-  **no ethernet** and both sides must be wireless. *(See Decision D1.)*
+  via one `docker compose` stack under a **systemd** unit (`restart: always`).
+  **No Portainer.**
+- **Hub is its own Wi-Fi AP** (`hostapd` + `dnsmasq` on onboard `wlan0`) for the
+  reactor network, with an **ethernet uplink** for internet/lab access. Reactors
+  join the hub's AP; the dongle/Wi-Fi-uplink variant is in §7 / D2.
 - **Container images pulled from GHCR** (arm64), not built on the Pi.
-- **No secret in the image or the repo** — all generated or injected at first boot.
+- **Baked public defaults** for all service config.
 
 ```
-   lab ethernet (no credentials — just plug in)
+   lab ethernet  (user finds the hub's IP here, as today — it's DHCP)
         │
-   ┌────┴─────┐   wlan0 = AP "evo-net"  ──┬── Pico reactor
-   │  EvoHub  │   (hostapd + dnsmasq)     ├── Pico reactor
-   │   (Pi)   │                           └── biologist laptop → Claude / Grafana
+   ┌────┴─────┐   wlan0 = AP "evo-net"  ──┬── Pico reactor   → mqtt 192.168.4.1
+   │  EvoHub  │   (hostapd + dnsmasq,     ├── Pico reactor
+   │   (Pi)   │    gateway 192.168.4.1)   └── (laptop, if it joins the AP)
    └──────────┘
    docker compose: postgres · mosquitto · grafana · listener · ui
 ```
 
-## 3. The two-layer model: generic image + injected config
+### IP model (the single source of truth)
 
-This is the heart of the design. Keep the image **generic and shareable**; push
-everything secret or site-specific into a tiny first-boot config.
+| Who talks | To what address |
+|---|---|
+| Hub's own containers (listener/UI → Postgres/Mosquitto) | **compose service names** (`postgres`, `mosquitto`) — never an IP |
+| Reactors → broker | the **fixed AP gateway** `192.168.4.1` (hub is the DHCP server, so this never changes) |
+| Human → Grafana/UI | the hub's **IP on whatever network they're on** — user-determined (DHCP on the lab side, exactly like today). No mDNS. |
 
-**Layer A — the golden image** (identical for every lab, contains no secrets):
+After this, no hardcoded IP survives in the runtime; the only IP constant is the
+reactors' `mqtt_host = 192.168.4.1`.
 
-- Raspberry Pi OS Lite **arm64**, headless.
-- **SSH pre-enabled** with a baked provisioning **public** key (private key lives
-  only on the operator's laptop / in the Claude skill).
-- Docker + compose plugin; `daemon.json` log rotation pre-installed.
-- The repo's compose + config **templates**; container images **pre-pulled** from
-  GHCR so the hub works even before it has internet.
-- `hostapd`/`dnsmasq` installed but **inert** until first-boot config enables them.
-- Data dirs + fstab prepared; a **first-boot systemd oneshot** installed.
+## 3. Image model: baked image + optional override
 
-**Layer B — first-boot injection** (per-lab, secret, written by the operator):
+**Layer A — the golden image** (identical for every lab, self-contained):
 
-- A single human-editable file, **`evohub.conf`**, dropped on the **boot
-  partition** (FAT — mountable on macOS/Windows/Linux with no tools, no network).
-- Holds: hostname, **AP SSID + passphrase**, optional uplink Wi-Fi creds, and
-  either explicit service passwords or a `generate=true` flag.
-- The first-boot oneshot reads it, **generates any missing secrets**, templates
-  every config, brings the stack up, creates DB tables, health-checks, then
-  **disables itself**.
+- Raspberry Pi OS Lite **arm64**, headless, **SSH pre-enabled** (baked public key;
+  private key stays on the operator's laptop).
+- Docker + compose plugin; `daemon.json` **log rotation** pre-installed.
+- The merged `docker-compose.yml` + configs with **baked public defaults**;
+  container images **pre-pulled** from GHCR (works offline on first boot).
+- `hostapd`/`dnsmasq` configured for the **default AP** (SSID `evo-net`, gateway
+  `192.168.4.1`); NAT to `eth0`.
+- A **systemd unit** that runs `docker compose up -d` on boot.
 
-Why this split: a baked-in image can't know a lab's Wi-Fi or carry per-lab
-secrets safely; Ansible-vault alone assumes the biologist runs Ansible. A
-boot-partition file is the one channel that is headless, offline, cross-OS, and
-writable by the Claude skill.
+**Layer B — optional override** (only if you deviate from defaults):
 
-## 4. Credential / config injection — the core deliverable
+- An optional **`evohub.conf`** on the FAT **boot partition** (editable on any OS,
+  no network). A first-boot oneshot reads it **only if present** to set:
+  Wi-Fi uplink creds, a custom AP SSID/passphrase (for multi-hub), or a hostname.
+- If absent → the image runs on pure defaults. No required injection step.
 
-Inventory of what must be injected or generated (grounded in the secret sweep):
+This replaces v1's mandatory "credential injection layer": the image is complete
+on its own, and the override file is a thin escape hatch.
 
-| Item | Today (committed) | New source at first boot |
+## 4. Configuration (baked defaults)
+
+All baked into the image; all non-sensitive public defaults by design:
+
+| Item | Baked default | Overridable via `evohub.conf`? |
 |---|---|---|
-| Postgres password | `postgres` | **generated** |
-| Grafana admin password | `veryhungryphage` | generated (or injected) |
-| MQTT service user/pass | `service_account` / `service_pass` | generated → mosquitto `pwfile` |
-| Reactor-network AP SSID + passphrase | `evo-net` / `hungryphage`, README `cicciociccio` | **injected** (operator-chosen, per lab) |
-| Reactor Wi-Fi creds | committed in reactor repo | **= the AP creds**, shared via `evotool init` |
-| Hostname / host IPs | `10.66.4.7` etc. hardcoded | `evohub.local` (mDNS) + injected |
-| MinIO / Prefect AWS keys | committed | **removed** from shipped stacks |
+| Postgres db/user/pass | `postgres` / `postgres` / `postgres` | no (not needed) |
+| Grafana admin | `admin` / `veryhungryphage` | no |
+| MQTT service user/pass | `service_account` / `service_pass` | no |
+| Hub-internal DB/MQTT host | service names `postgres` / `mosquitto` | no |
+| AP SSID / passphrase | `evo-net` / `hungryphage` (matches the reactor default) | yes (multi-hub) |
+| AP gateway IP | `192.168.4.1/24` | no |
+| Uplink | ethernet (DHCP) | **yes — Wi-Fi creds** (the one genuine per-site secret) |
+| Hostname | `evohub` | yes |
 
-Flow: `evohub.conf` → first-boot oneshot → renders `.env` (consumed by compose &
-the Python `Config`), `mosquitto` `pwfile`, Grafana admin env, and `hostapd.conf`.
-Generated secrets are persisted to the data volume **and surfaced back to the
-operator** (printed by the Claude skill / written to a file it reads after SSH).
+The only injection that ever carries a real secret is the **Wi-Fi-uplink
+variant** (a lab Wi-Fi password) — and only if you don't use ethernet.
 
-## 5. Reuse & complete the Ansible roles
+## 5. Build the image (shell, no Ansible)
 
-The existing roles become the **single source of provisioning logic**, runnable in
-two modes:
+- **Primary: `pi-gen`** (the official Raspberry Pi OS builder) with a custom
+  **shell stage** that performs the install recipe. Runs in CI/Docker, outputs
+  `evohub-vX.Y.img.xz`.
+- **Pragmatic fallback:** provision one **reference Pi** with the recipe by hand,
+  then capture it with `pishrink`/`dd`. Crude but fast for the first cut.
+- **Mine the abandoned Ansible roles** for the recipe contents — they already
+  worked out: apt deps (`docker.io`, `hostapd`, `dnsmasq`, `dhcpcd`, …), Docker
+  install + group + socket perms, data-dir layout, USB auto-mount.
 
-- **Build-time** (CI, against the mounted image / chroot) → bakes the golden image.
-- **Run-time** (optional, over SSH against a live Pi) → for iterating on the
-  playbooks and for updating an already-deployed hub.
-
-Work needed:
-
-- **Port** the roles forward onto current `main` (they predate recent app work).
-- **Fix/replace `build_evohub_images`**: drop the broken local Docker build with
-  the empty SSH key; instead **pull images from GHCR** (see §6). Keep a build
-  path only for CI.
-- **Parameterize** `ansible_user`, repo, and all networking vars.
-- **New roles**:
-  - `network_ap` — `hostapd` + `dnsmasq` + `dhcpcd` static IP + NAT to `eth0`
-    (productionize the README's hostapd recipe, currently undeployed).
-  - `compose_stack` — replace the Portainer-API scripts with one
-    `docker compose` stack + a systemd unit.
-  - `log_rotation` — `daemon.json` (fold in `claude/keen-maxwell`).
-  - `first_boot` — install the oneshot + config templates + `evohub.conf.example`.
-- One top-level playbook `install_appliance.yml` composing the above.
+Recipe (shell): base image → apt deps + Docker → `daemon.json` log rotation →
+copy compose + configs + AP config → `docker compose pull` (pre-pull GHCR
+images) → install systemd unit + optional first-boot hook → enable SSH key.
 
 ## 6. Container images → GHCR
 
-- CI builds **arm64** `idec_base` / `evoflow_listener` / `evoflow_ui` via `buildx`
-  and pushes to `ghcr.io/schwank-lab/*`.
-- **Removes the SSH-key-in-image hack**: `evoflow_db` / `evoflow_utils` are
-  *subdirectories of this same repo*, so the CI build installs them as **local
-  path deps** instead of `git@github` deps — no deploy key on the Pi at all.
-- Compose pins GHCR tags; the image build **pre-pulls** them so first boot is
-  offline-capable. Updates become `docker compose pull && up -d`.
+- CI builds **arm64** `idec_base` / `evoflow_listener` / `evoflow_ui` via `buildx`,
+  pushes to `ghcr.io/schwank-lab/*`.
+- **Removes the SSH-key-in-image hack**: `evoflow_db`/`evoflow_utils` are
+  subdirectories of this same repo, so CI installs them as **local path deps**
+  instead of `git@github` deps — no deploy key on the Pi.
+- Compose pins GHCR tags; image pre-pulls them. Updates = `docker compose pull && up -d`.
 
-## 7. Claude Code provisioning skill (the biologist UX)
+## 7. Networking: hub-as-AP
 
-A repo skill `provision-evohub` that:
+Productionize the README's never-deployed `hostapd`/`dnsmasq` recipe:
 
-1. Prompts for **AP SSID + passphrase** and optional uplink Wi-Fi / hostname;
-   **generates** all service passwords.
-2. Downloads the released image and drives **`rpi-imager --cli <img> /dev/diskN`**
-   to flash the chosen SD device — with a **hard confirm on the destructive
-   write** (the one genuinely dangerous step).
-3. Writes **`evohub.conf`** (and re-asserts the SSH key) onto the boot partition
-   (`/Volumes/bootfs` on macOS).
-4. Waits for boot, discovers **`evohub.local`** via mDNS, SSHes in with the baked
-   key, watches the first-boot oneshot, and runs **health checks** on every service.
-5. Prints the **generated passwords + URLs** (Grafana `http://evohub.local:3000`,
-   the UI, the DB) and optionally exercises the data path with `fake_reactor`.
+- `wlan0` static **`192.168.4.1/24`**; `dnsmasq` DHCP range on that subnet;
+  `hostapd` SSID **`evo-net`** / passphrase `hungryphage` (the existing reactor
+  defaults, so reactors associate unchanged); **NAT** `wlan0 → eth0`.
+- **Reactor change (one line):** `evoflow-reactor/pico/configs/default-network_config.json`
+  `mqtt_host` `192.168.31.10` → **`192.168.4.1`**.
+- **Dongle only for the Wi-Fi-uplink variant** (D2): onboard radio can't be AP +
+  Wi-Fi-client at once, so a USB Wi-Fi dongle gives the second radio. With
+  ethernet uplink, no dongle.
 
-Biologist's literal steps remain: insert card, plug in ethernet+power, run Claude,
-answer 2 prompts.
+## 8. Claude Code provisioning skill (optional UX layer)
 
-## 8. Repo changes (concrete worklist)
+The image works without it, but the skill makes it turnkey:
 
-- **Security**: purge committed secrets; rotate the live ones; `.gitignore` the
-  stray in-repo `.venv/` dirs; delete MinIO/Prefect AWS keys from shipped stacks.
-- **Compose**: merge `backend_stack` + `monitor_stack` into one env-driven
-  `docker-compose.yml`; fix the mosquitto triple-mount; pin GHCR tags;
-  align Python to 3.12 across base + packages.
-- **Ansible**: bring roles to `main`; complete/replace `build_evohub_images`;
-  add `network_ap`, `compose_stack`, `log_rotation`, `first_boot`; add
-  `install_appliance.yml`.
-- **Image**: add the image-build config + CI workflow producing
+1. Prompts for any overrides (else pure defaults); generates none (defaults are baked).
+2. Drives **`rpi-imager --cli <img> /dev/diskN`** to flash, with a **hard confirm
+   on the destructive write**.
+3. *(optional)* writes `evohub.conf` to the boot partition.
+4. After boot, connects to the hub **over the AP** (`192.168.4.1`, known —
+   no discovery needed) or a user-provided IP, runs **health checks**, and
+   **prints the live URLs + the global IP it observes** (so the user has the
+   actual dashboard address without mDNS).
+
+Biologist's steps: insert card, plug in ethernet+power, run Claude, confirm the flash.
+
+## 9. Repo changes (concrete worklist)
+
+- **Compose**: merge `backend_stack` + `monitor_stack` into one `docker-compose.yml`;
+  fix `.env` `DB_HOST`/`MQTT_HOST` → service names; fix mosquitto triple-mount;
+  pin GHCR tags; align Python to 3.12.
+- **Networking**: `hostapd`/`dnsmasq`/`dhcpcd` config + NAT + systemd enablement.
+- **Image build**: `pi-gen` config (or reference-Pi capture) + CI workflow →
   `evohub-vX.Y.img.xz`.
-- **CI**: add GHCR arm64 build/push for the three images.
-- **First-boot**: oneshot script + config templates + `evohub.conf.example`.
+- **CI**: GHCR arm64 `buildx` build/push for the three images.
+- **First-boot (optional)**: oneshot that reads `evohub.conf` overrides + an
+  `evohub.conf.example`.
 - **Skill**: `.claude/skills/provision-evohub`.
-- **Docs**: replace the manual README with the image flow; keep a manual/advanced
-  appendix.
+- **Docs**: rewrite README to the image flow; "open Grafana at `http://<hub-ip>:3000`"
+  (user supplies the IP); keep a manual/advanced appendix.
+- **Reactor repo**: `mqtt_host` default → `192.168.4.1`; update the `mqtt-cli/*`
+  and `pico-bridge/config.py` debug hosts.
+- **Dropped from v1**: secret purge/rotation (keep public defaults); Avahi/mDNS.
 
-## 9. Milestones (ordered so there is a working end-to-end early)
+## 10. Milestones (working end-to-end early)
 
 | # | Milestone | Proves |
 |---|---|---|
-| **M1** | Consolidate & de-secret: merged env-driven compose; `docker compose up` brings the hub up from an injected `.env` on a manually-booted Pi | the runtime works without Portainer or committed secrets |
-| **M2** | First-boot injection: oneshot reads `evohub.conf` → templates → `compose up`, on a **stock**-flashed Pi (Imager headless) | injection works before any custom image exists |
+| **M1** | Consolidate runtime: one `docker-compose.yml` with baked defaults; `.env` → service names; `docker compose up -d` brings the full hub up on any Docker host | the stack runs self-contained |
+| **M2** | Boot autostart: systemd unit runs compose on boot; optional `evohub.conf` hook; tested on a stock-flashed Pi | boot-to-running |
 | **M3** | GHCR images: CI builds/pushes arm64; Pi **pulls** instead of builds | no on-Pi build, no SSH-key hack |
-| **M4** | Golden image: CI bakes the image (Ansible-in-build) with images pre-pulled; flash → boot → running | the shippable artifact |
-| **M5** | Networking: `network_ap` role; reactors associate to the hub AP; end-to-end with a real/fake reactor | the appliance topology |
-| **M6** | Claude skill: flash + inject + verify; full biologist run-through | the end-user experience |
+| **M4** | Networking: hub-as-AP; reactors associate at `192.168.4.1`; end-to-end with a real/fake reactor | the appliance topology |
+| **M5** | Golden image: shell/`pi-gen` build with images pre-pulled; flash → boot → running appliance | the shippable artifact |
+| **M6** | Claude skill: flash + (optional config) + health-check + print URLs/IP | the biologist UX |
 
-Each milestone is independently useful and testable; M1–M2 give a working
-injected deployment long before the image pipeline exists.
+## 11. Risks & mitigations
 
-## 10. Risks & mitigations
+- **Destructive flash** (`rpi-imager` raw write) → explicit device confirmation;
+  never auto-select a disk.
+- **Image distribution** (>2 GB GitHub asset limit) → `xz`-compress; GitHub Release.
+- **Offline time drift** — schema is timestamp-keyed, an isolated AP island has no
+  NTP → keep the ethernet uplink, or add an RTC; document.
+- **Onboard-radio AP limits** (client count/range) → dongle + external antenna
+  option per site (D2).
+- **SD-card fill/wear** (already bit them) → log rotation baked in; consider
+  Postgres data on the external disk / a quality SD; monitor free space.
+- **arm64-only** → `buildx` in CI; test on real Pi 4/5.
 
-- **Destructive flash** (`rpi-imager` raw write) → explicit device confirmation in
-  the skill; never auto-select a disk.
-- **Image distribution** (>2 GB GitHub asset limit) → `xz`-compress; host as a
-  GitHub Release / Imager image-list URL.
-- **Offline time drift** — the schema is timestamp-keyed, an isolated AP island
-  has no NTP → keep the ethernet uplink, or add an RTC module; document.
-- **Onboard-radio AP limits** (client count / range) → USB dongle + external
-  antenna option per site (Decision D1).
-- **SD-card fill / wear** (already bit them: 15 GB of logs) → log rotation baked
-  in; consider moving Postgres data to the external disk or a quality SD; monitor
-  free space.
-- **arm64-only** image/containers → `buildx` in CI; test on real Pi 4/5.
-- **Secret leakage** → never in image/repo; generate at first boot; print once.
+*(Secret-leakage risk dropped: no secrets — public defaults by design.)*
 
-## 11. Open decisions (need a call before building)
+## 12. Open decisions
 
-- **D1 — Networking**: hub-as-AP (**recommended**, one box) vs keep a separate
-  router. Drives whether the image ships `hostapd`/`dnsmasq` active and whether a
-  dongle is in the kit.
-- **D2 — Uplink**: ethernet (**recommended**, no creds, reliable mDNS) vs Wi-Fi
-  (needs a dongle so the radio can be AP + client).
-- **D3 — Image tool**: `packer-builder-arm` + Ansible provisioner (**recommended**
-  — natively reuses the existing roles) vs `pi-gen` (official) vs provision-a-
-  reference-Pi-then-`pishrink`/`dd` (pragmatic fallback).
-- **D4 — Portainer**: drop in favor of compose + systemd (**recommended**) vs keep
-  as an optional GUI.
+- **D2 — Uplink**: ethernet (**baseline** — no creds, no dongle) vs Wi-Fi (needs
+  a USB dongle so the radio can be AP + client, **and** the one piece of
+  credential injection).
+- **D3 — Image tool**: `pi-gen` shell stage (**recommended**) vs reference-Pi +
+  `pishrink`/`dd` (faster first cut).
 - **D5 — Hardware baseline**: Pi 4 vs Pi 5; SD vs SSD; external data disk yes/no.
+
+*Decided:* hub-as-AP (D1); drop Portainer for compose+systemd (D4); no Ansible;
+no mDNS; bake public defaults.
+
+---
+
+## Changelog v1 → v2
+
+- **Ansible dropped.** It was never adopted (abandoned 2024 WIP, not on `main`).
+  Image is built with plain shell (`pi-gen`); the old roles are mined for steps only.
+- **Public defaults, injection optional.** No sensitive data, so service configs
+  are baked from the existing defaults; the mandatory "credential injection layer"
+  becomes an *optional* `evohub.conf` override for Wi-Fi uplink / AP name / hostname.
+- **IP model fixed.** Hub-internal → compose service names; reactors → fixed AP
+  gateway `192.168.4.1`; humans → user-determined IP.
+- **mDNS removed.** No `evohub.local`/Avahi; the setup *prints* the live IP instead.
+- **hub-as-AP is the baseline** (was an open decision).
+- **Milestones reordered** around the simpler, mostly-baked design.

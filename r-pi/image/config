@@ -1,0 +1,21 @@
+# pi-gen config for the EvoHub appliance image.
+# Consumed by build-image.sh (which copies it into the pi-gen checkout).
+
+IMG_NAME="evohub"
+RELEASE="trixie"   # matches the pi-gen arm64 branch default
+TARGET_HOSTNAME="evohub"
+
+# Default login. Headless — SSH is enabled below. Change the password, or set a
+# key with PUBKEY_SSH_FIRST_USER, before shipping to anyone outside the lab.
+FIRST_USER_NAME="evohub"
+FIRST_USER_PASS="evohub"
+DISABLE_FIRST_BOOT_USER_RENAME=1
+
+ENABLE_SSH=1
+# Recommended for a shipped image: bake the operator's public key and (optionally)
+# disable password SSH.
+# PUBKEY_SSH_FIRST_USER="ssh-ed25519 AAAA... operator@laptop"
+# PUBKEY_ONLY_SSH=1
+
+# Build only up to Lite (stage2) plus our appliance stage — no desktop.
+STAGE_LIST="stage0 stage1 stage2 stage-evohub"

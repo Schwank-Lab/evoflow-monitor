@@ -1,0 +1,86 @@
+# EvoHub stack — merged backend + apps, replaces the separate Portainer stacks.
+# Brought up on boot by evohub.service (systemd) -> `docker compose up -d`.
+# Values come from the sibling `.env` (baked public defaults; see evohub.env).
+name: evohub
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks: [evohub]
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: always
+    # NOTE: separate volumes for config/data/log (the old stack mounted one
+    # named volume at all three paths, which collapsed them — that bug is fixed
+    # here). config is a bind mount so the baked mosquitto.conf ships with the image.
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    ports:
+      - "1883:1883"
+    networks: [evohub]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    environment:
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASS}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks: [evohub]
+
+  listener:
+    image: evoflow_listener:latest   # built on the Pi at first boot (no registry)
+    container_name: mqtt_listener
+    restart: always
+    # Reach the broker/db over the compose network by service name — NOT via the
+    # hub's own external IP (which is what the committed .env used to hardcode).
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    depends_on: [postgres, mosquitto]
+    networks: [evohub]
+
+  ui:
+    image: evoflow_ui:latest         # built on the Pi at first boot (no registry)
+    container_name: ui
+    restart: always
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    ports:
+      - "8282:8181"
+    depends_on: [postgres, mosquitto]
+    networks: [evohub]
+
+volumes:
+  postgres_data:
+  mosquitto_data:
+  mosquitto_log:
+  grafana_data:
+
+networks:
+  evohub:
+    driver: bridge

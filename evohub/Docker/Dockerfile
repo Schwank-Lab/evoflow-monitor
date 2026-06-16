@@ -1,5 +1,6 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.11-alpine
+# 3.12 — the listener/UI packages require python >=3.12.
+FROM python:3.12-alpine
 
 # Install openssh
 RUN apk add --no-cache openssh poetry
