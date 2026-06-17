@@ -17,6 +17,12 @@ install -m 0644 files/evohub.env         "${ROOTFS_DIR}/opt/evohub/.env"
 install -d "${ROOTFS_DIR}/opt/evohub/src"
 cp -r files/src/. "${ROOTFS_DIR}/opt/evohub/src/"
 
+# Default deploy key (baked by build-image.sh). The on-Pi build uses it unless the
+# deployer overrides with /boot/firmware/idec_github (see evohub-build.sh).
+if [ -f files/idec_github ]; then
+  install -D -m 0600 files/idec_github "${ROOTFS_DIR}/opt/evohub/idec_github"
+fi
+
 cat > "${ROOTFS_DIR}/opt/evohub/mosquitto/config/mosquitto.conf" <<'EOF'
 listener 1883 0.0.0.0
 allow_anonymous true
@@ -95,21 +101,28 @@ EOF
 # ---------------------------------------------------------------------------
 install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-firstboot.sh" <<'EOF'
 #!/bin/bash
-# Apply optional overrides from the boot partition. No file -> no-op.
+# Apply optional boot-partition overrides. Each file is independent; absent -> skip.
 set -e
+
 CONF=/boot/firmware/evohub.conf
-[ -f "$CONF" ] || exit 0
-# shellcheck disable=SC1090
-. "$CONF"
+if [ -f "$CONF" ]; then
+  # shellcheck disable=SC1090
+  . "$CONF"
+  [ -n "${HOSTNAME:-}" ]      && hostnamectl set-hostname "$HOSTNAME"
+  [ -n "${AP_SSID:-}" ]       && sed -i "s/^ssid=.*/ssid=${AP_SSID}/" /etc/hostapd/hostapd.conf
+  [ -n "${AP_PASSPHRASE:-}" ] && sed -i "s/^wpa_passphrase=.*/wpa_passphrase=${AP_PASSPHRASE}/" /etc/hostapd/hostapd.conf
+  # Wi-Fi uplink instead of ethernet — needs a USB Wi-Fi dongle on wlan1.
+  if [ -n "${UPLINK_WIFI_SSID:-}" ] && [ -n "${UPLINK_WIFI_PASS:-}" ]; then
+    nmcli connection add type wifi ifname wlan1 con-name evohub-uplink \
+      ssid "$UPLINK_WIFI_SSID" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$UPLINK_WIFI_PASS" || true
+  fi
+fi
 
-[ -n "${HOSTNAME:-}" ]       && hostnamectl set-hostname "$HOSTNAME"
-[ -n "${AP_SSID:-}" ]        && sed -i "s/^ssid=.*/ssid=${AP_SSID}/" /etc/hostapd/hostapd.conf
-[ -n "${AP_PASSPHRASE:-}" ]  && sed -i "s/^wpa_passphrase=.*/wpa_passphrase=${AP_PASSPHRASE}/" /etc/hostapd/hostapd.conf
-
-# Wi-Fi uplink instead of ethernet — needs a USB Wi-Fi dongle on wlan1.
-if [ -n "${UPLINK_WIFI_SSID:-}" ] && [ -n "${UPLINK_WIFI_PASS:-}" ]; then
-  nmcli connection add type wifi ifname wlan1 con-name evohub-uplink \
-    ssid "$UPLINK_WIFI_SSID" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$UPLINK_WIFI_PASS" || true
+# Optional: install a user SSH public key (login without the default password).
+if [ -f /boot/firmware/authorized_keys ]; then
+  install -d -m 0700 /home/evohub/.ssh
+  install -m 0600 /boot/firmware/authorized_keys /home/evohub/.ssh/authorized_keys
+  chown -R evohub:evohub /home/evohub/.ssh
 fi
 EOF
 
@@ -136,9 +149,10 @@ install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-build.sh" <<'
 #!/bin/bash
 set -e
 SRC=/opt/evohub/src
-KEY=/boot/firmware/idec_github
+KEY=/boot/firmware/idec_github                  # deployer override (optional)
+[ -f "$KEY" ] || KEY=/opt/evohub/idec_github    # baked default
 if [ ! -f "$KEY" ]; then
-  echo "evohub-build: no GitHub key at $KEY — drop it there to build the app images." >&2
+  echo "evohub-build: no deploy key (/boot/firmware/idec_github or baked default)." >&2
   exit 1
 fi
 docker build --build-arg ssh_private_key="$(cat "$KEY")" -t idec_base "$SRC/Docker"
@@ -152,10 +166,11 @@ EOF
 # ---------------------------------------------------------------------------
 cat > "${ROOTFS_DIR}/etc/systemd/system/evohub-firstboot.service" <<'EOF'
 [Unit]
-Description=EvoHub first-boot overrides (optional /boot/firmware/evohub.conf)
+Description=EvoHub first-boot overrides (optional /boot/firmware/{evohub.conf,authorized_keys})
 After=local-fs.target
 Before=hostapd.service dnsmasq.service evohub.service
-ConditionPathExists=/boot/firmware/evohub.conf
+ConditionPathExists=|/boot/firmware/evohub.conf
+ConditionPathExists=|/boot/firmware/authorized_keys
 
 [Service]
 Type=oneshot

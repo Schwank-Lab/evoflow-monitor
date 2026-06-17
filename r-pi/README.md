@@ -1,73 +1,77 @@
-# EvoHub appliance
+# EvoHub on Raspberry Pi (appliance)
 
-A pre-configured SD-card image for the EvoHub. Flash it, drop one key file on it,
-plug the Pi into ethernet + power, and it boots into a complete, running hub —
-**no monitor, no keyboard, no manual setup**.
+This is one **deployment** of EvoHub — packaged as a self-contained Raspberry Pi
+appliance. Flash a pre-built SD image, plug the Pi into ethernet + power, and it
+boots into the complete hub and runs as the reactor fleet's Wi-Fi access point
+(`evo-net`). No monitor, no keyboard, no manual setup.
 
-On boot the hub runs the whole stack (Postgres · Mosquitto · Grafana · MQTT
-listener · UI) under `docker compose`, and acts as its **own Wi-Fi access point**
-(`evo-net`) for the reactors. It replaces the manual process in the repo-root
-`README.md`.
+> For **what EvoHub is and how it works** (components, message flow, data model),
+> see the [top-level README](../README.md). This page is just how to run it on a Pi.
 
 ---
 
 # Deploying a hub
 
-For anyone setting up an EvoHub from a finished image. You need: a Raspberry Pi
-(4 or 5), an SD card (≥8 GB), an ethernet cable, and the two files below.
+For anyone setting up an EvoHub. You need a Raspberry Pi (4 or 5), an SD card
+(≥8 GB), and an ethernet cable.
 
-## 1. Get the files
+## 1. Download the image
 
-- **The image** — `evohub-<date>.img.zip` (from a release, or built by a
-  developer; see [For developers](#for-developers)).
-- **The deploy key** — a file named `idec_github` (ask the maintainer). The hub
-  builds its app images on first boot from the private repo, so it needs this key.
+Grab the latest `evohub-<date>.img.zip` from the repo's
+**[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**
+(it's a private repo, so you'll need access). That's the only file you need —
+the deploy key and all config are already baked in.
 
-## 2. Flash the image
+## 2. Flash the image (command line)
 
-Use **[Raspberry Pi Imager](https://www.raspberrypi.com/software/)** (Mac /
-Windows / Linux):
-
-1. **Choose Device** → skip, or pick your Pi model.
-2. **Choose OS** → scroll down → **Use custom** → select the `.img.zip`.
-3. **Choose Storage** → select the SD card (it's shown by name/size — so you
-   can't pick the wrong disk).
-4. **Next** → if asked *"apply OS customisation settings?"* click **No** (the
-   image is already configured).
-5. Confirm, and enter your computer password when prompted. It writes + verifies.
-
-## 3. Add the deploy key
-
-After flashing, the small `bootfs` partition mounts automatically (macOS:
-`/Volumes/bootfs`; Windows: a new drive). Copy the key onto it:
+Find the SD card, then write the image. **macOS:**
 
 ```bash
-cp idec_github /Volumes/bootfs/idec_github      # macOS
+diskutil list external physical              # find the card → note its diskN (e.g. disk7)
+diskutil unmountDisk /dev/diskN
+unzip -p evohub-*.img.zip | sudo dd of=/dev/rdiskN bs=4m    # Ctrl-T shows progress
 ```
 
-*(Optional)* drop an `evohub.conf` there too, to override the hostname, the AP
-name/password, or to use Wi-Fi instead of ethernet — see `evohub.conf.example`
-on the partition. Without it, the defaults apply.
+**Linux:**
+```bash
+lsblk                                         # find the card → /dev/sdX
+unzip -p evohub-*.img.zip | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+```
 
-Eject the card.
+⚠️ Double-check the device — `dd` to the wrong disk wipes it. (If you'd rather not
+risk it, the **Raspberry Pi Imager** GUI lists the card by name and works too.)
+
+## 3. (Optional) add your SSH key or override defaults
+
+The image works as-is — skip this unless you want one of these. Before first boot,
+mount the small `bootfs` partition (macOS: `/Volumes/bootfs`) and drop a file on it:
+
+- **`authorized_keys`** (your SSH public key) → log in without the password.
+- **`idec_github`** → override the baked deploy key (e.g. a different repo key).
+- **`evohub.conf`** → override hostname / AP name / use Wi-Fi uplink (see
+  `evohub.conf.example` on the partition).
+
+SSH is on with **password auth by default** — user `evohub`, password `evohub` —
+so `ssh evohub@<hub-ip>` always works even without a key.
 
 ## 4. Boot the Pi
 
-Card into the Pi → **ethernet cable** (required — first boot needs internet) →
-**power**. The first boot **builds the app images** (a few minutes), then starts
-everything. The `evo-net` Wi-Fi appears once it's up.
+Card into the Pi → **ethernet cable** (the first boot builds the app images and
+needs internet) → **power**. The first boot takes a few minutes to build, then
+starts everything; the `evo-net` Wi-Fi appears once it's up.
 
 ## 5. Open the dashboards
 
-Find the hub's IP address on your network (your router's device/DHCP list), then:
+Find the hub's IP on your network (try `ssh evohub@evohub.local`, or your router's
+device list), then:
 
 - **Grafana** — `http://<hub-ip>:3000`  (login `admin` / `veryhungryphage`)
 - **UI** — `http://<hub-ip>:8282`
 
 ## 6. Connect reactors
 
-Reactors join the **`evo-net`** Wi-Fi (password `hungryphage`) and talk to the
-hub at the fixed address **`192.168.4.1`**. Set this once in the reactor repo's
+Reactors join the **`evo-net`** Wi-Fi (password `hungryphage`) and reach the hub
+at the fixed address **`192.168.4.1`**. Set this once in the reactor repo's
 `pico/configs/default-network_config.json` → `"mqtt_host": "192.168.4.1"`.
 
 ## Operating the hub
@@ -81,9 +85,9 @@ docker compose logs -f listener     # follow a service's logs
 
 ## If something's off
 
-- **Services not up / first boot slow** — the images are still building. Check
+- **Services not up / first boot slow** — images are still building. Check
   `systemctl status evohub-build` and `journalctl -u evohub-build`. It needs the
-  ethernet/internet and the `idec_github` key from step 3.
+  ethernet/internet (and a deploy key — baked in, or your override from step 3).
 - **No `evo-net` Wi-Fi** — the AP may need tuning on this OS version, but the
   dashboards are still reachable over ethernet, so it won't block you.
 
@@ -99,8 +103,8 @@ docker compose logs -f listener     # follow a service's logs
 
 # For developers
 
-For building or modifying the appliance image. Design rationale and decisions
-are in [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md).
+For building or modifying the appliance image. Design rationale and open
+decisions are in [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md).
 
 ## Layout
 
@@ -115,64 +119,69 @@ r-pi/
     stage-evohub/         # pi-gen custom stage that bakes everything in
 ```
 
-## Build the image
+## Build the image locally
 
 On any machine with **Docker** (~10 GB free, ~20–40 min):
 
 ```bash
 cd r-pi
-./build-image.sh          # output: image/.pi-gen/deploy/*.zip
+EVOHUB_DEPLOY_KEY=~/.ssh/idec_github ./build-image.sh    # output: image/.pi-gen/deploy/*.zip
 ```
 
-It clones pi-gen, stages the compose/config/source into a custom stage, and runs
-the build. **It uses pi-gen's `arm64` branch** — important on Apple Silicon: the
-default (32-bit) branch fails on Docker Desktop (`setarch linux32` isn't
-supported by its VM kernel), whereas arm64 builds **natively** and skips that
-path. Apple Silicon needs no emulation; a Linux x86 host or CI works too.
+`EVOHUB_DEPLOY_KEY` (default `~/.ssh/idec_github`) is **baked into the image** so
+the on-Pi build works without the deployer adding anything. ⚠️ Because the image
+carries that key, **keep releases in the private repo** — or switch to local path
+deps (plan §6) to drop the key and make the image safely public.
+
+It uses pi-gen's **`arm64` branch** — important on Apple Silicon: the default
+(32-bit) branch fails on Docker Desktop (`setarch linux32` isn't supported by its
+VM kernel), whereas arm64 builds **natively**. A Linux x86 host or CI works too
+(via qemu).
+
+## Publishing a downloadable image (GitHub Releases)
+
+`.github/workflows/build-image.yml` builds the image in CI and attaches the
+`.img.zip` to a GitHub Release, so deployers can just download it (§1). To set up:
+
+1. Add the deploy key as a repo **Actions secret** named `IDEC_GITHUB_KEY`
+   (Settings → Secrets and variables → Actions).
+2. Push a tag like `image-v1` (or run the workflow manually) — it builds and
+   creates a Release with the image attached.
+
+The image (~900 MB) is well under GitHub's 2 GB release-asset limit.
 
 ## How the appliance is assembled
 
-`image/stage-evohub/00-evohub/01-run.sh` bakes into the rootfs:
+`image/stage-evohub/00-evohub/01-run.sh` bakes into the rootfs: Docker (official
+repo), log rotation (`daemon.json`), the **`evo-net` AP** (`hostapd` + `dnsmasq` +
+static `wlan0` `192.168.4.1/24` + NAT), the default deploy key, and the systemd
+units (`evohub-firstboot`, `evohub-build`, `evohub-nat`, `evohub`).
 
-- **Docker** (official apt repo, codename detected dynamically) + compose plugin.
-- **Log rotation** (`/etc/docker/daemon.json`, 50 MB ×3) — the SD card once filled
-  with 15 GB of logs and broke Grafana.
-- **The `evo-net` AP** — `hostapd` + `dnsmasq` + a static `wlan0` at
-  `192.168.4.1/24` + NAT to `eth0`.
-- **systemd units** — `evohub-firstboot` (optional `evohub.conf` overrides),
-  `evohub-build`, `evohub-nat`, `evohub`.
-
-## Container build (on the Pi, no registry)
-
-Per the project decision, the listener/UI images build **on the Pi at first
-boot**, not in a registry. `build-image.sh` stages `evohub/{Docker,evoflow_listener,evoflow_ui}`
-into `/opt/evohub/src`; `evohub-build.service` runs once and builds
-`idec_base` → `evoflow_listener` → `evoflow_ui` (using the boot-partition
-`idec_github` key for the private git deps), then `evohub.service` brings the
-stack up. This is why each deployed card needs that key file.
+**Container build (on the Pi, no registry):** `build-image.sh` stages
+`evohub/{Docker,evoflow_listener,evoflow_ui}` into `/opt/evohub/src`;
+`evohub-build.service` runs once and builds `idec_base` → `evoflow_listener` →
+`evoflow_ui` (using the deploy key for the private git deps), then
+`evohub.service` brings the stack up.
 
 ## Changing things
 
 - **Service config / defaults** — `docker/evohub.env`, `docker/docker-compose.yml`.
-- **AP SSID / IP / passphrase** — the `hostapd.conf` / `dnsmasq` / `dhcpcd`
-  blocks in `01-run.sh`.
-- **Python base / build deps** — `evohub/Docker/Dockerfile` (currently
-  `python:3.12-alpine`).
-- **Image name / user / SSH key** — `image/config`.
+- **AP SSID / IP / passphrase** — the `hostapd`/`dnsmasq`/`dhcpcd` blocks in `01-run.sh`.
+- **Python base / build deps** — `evohub/Docker/Dockerfile` (`python:3.12-alpine`).
+- **Image name / default user / SSH** — `image/config`.
 
 ## Known issues / caveats
 
-- **UI build on Alpine** — `evoflow_ui` pulls `pandas`; compiling it on
-  `python:3.12-alpine` can be slow or need extra build deps. If painful, switch
-  `idec_base` to `python:3.12-slim` (Debian wheels).
+- **UI build on Alpine** — `evoflow_ui` pulls `pandas`; compiling on
+  `python:3.12-alpine` can be slow. If painful, switch `idec_base` to
+  `python:3.12-slim` (Debian wheels).
 - **AP on newer OS** — Bookworm/Trixie default to NetworkManager; we hand `wlan0`
   to hostapd. The most likely thing to need tuning on real hardware.
-- **First boot needs internet** to build the images. Pre-baking them (true
-  offline first boot) is a future enhancement.
-- **Deploy key on each card** — a consequence of build-on-Pi/no-registry. The
-  cleaner paths (local path deps, or a registry) are in the plan, §6.
+- **First boot needs internet** to build the images.
+- **Deploy key in the image** — a consequence of build-on-Pi / no registry; keep
+  releases private, or move to path deps (plan §6).
 
 ## See also
 
-- [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md) — full design + open decisions.
-- Repo-root `README.md` — the legacy manual process (kept for reference/recovery).
+- [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md) — full design + decisions.
+- [`legacy-manual-setup.md`](./legacy-manual-setup.md) — the pre-appliance manual process.

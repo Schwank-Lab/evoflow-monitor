@@ -1,0 +1,58 @@
+name: Build EvoHub image
+
+# Produces a flashable evohub-*.img.zip and attaches it to a GitHub Release so
+# deployers can download it (see r-pi/README.md). Trigger by pushing a tag like
+# `image-v1`, or run manually from the Actions tab.
+#
+# Requires a repo Actions secret IDEC_GITHUB_KEY = the private deploy key that the
+# on-Pi build uses to fetch evoflow_db / evoflow_utils. It is baked into the image,
+# so keep this repo (and its Releases) private.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['image-v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest        # x86 — arm64 image built via qemu (see note below)
+    timeout-minutes: 180
+    permissions:
+      contents: write             # create the release / upload the asset
+    steps:
+      - uses: actions/checkout@v4
+
+      # The arm64 image is emulated on x86 runners (slow). If your plan has native
+      # arm64 runners, set `runs-on: ubuntu-24.04-arm` above and delete this step.
+      - name: Enable arm64 emulation
+        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
+
+      - name: Write deploy key
+        env:
+          KEY: ${{ secrets.IDEC_GITHUB_KEY }}
+        run: |
+          mkdir -p "$HOME/.keys"
+          printf '%s\n' "$KEY" > "$HOME/.keys/idec_github"
+          chmod 600 "$HOME/.keys/idec_github"
+
+      - name: Build image
+        run: |
+          cd r-pi
+          EVOHUB_DEPLOY_KEY="$HOME/.keys/idec_github" ./build-image.sh
+
+      - name: Locate image
+        id: img
+        run: echo "path=$(ls r-pi/image/.pi-gen/deploy/image_*-evohub.zip)" >> "$GITHUB_OUTPUT"
+
+      - name: Attach to Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.img.outputs.path }}
+
+      - name: Upload as artifact (manual run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evohub-image
+          path: ${{ steps.img.outputs.path }}
