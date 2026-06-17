@@ -18,9 +18,8 @@ For anyone setting up an EvoHub. You need a Raspberry Pi (4 or 5), an SD card
 ## 1. Download the image
 
 Grab the latest `evohub-<date>.img.zip` from the repo's
-**[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**
-(it's a private repo, so you'll need access). That's the only file you need —
-the deploy key and all config are already baked in.
+**[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**. That's
+the only file you need — all the config is already baked in.
 
 ## 2. Flash the image (command line)
 
@@ -41,18 +40,15 @@ unzip -p evohub-*.img.zip | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
 ⚠️ Double-check the device — `dd` to the wrong disk wipes it. (If you'd rather not
 risk it, the **Raspberry Pi Imager** GUI lists the card by name and works too.)
 
-## 3. (Optional) add your SSH key or override defaults
+## 3. (Optional) override defaults
 
-The image works as-is — skip this unless you want one of these. Before first boot,
-mount the small `bootfs` partition (macOS: `/Volumes/bootfs`) and drop a file on it:
+The image works as-is — skip this unless you want to change something. Before
+first boot, mount the `bootfs` partition (macOS: `/Volumes/bootfs`) and drop an
+**`evohub.conf`** on it to override the hostname, AP name/password, or to use a
+Wi-Fi uplink instead of ethernet (see `evohub.conf.example` on the partition).
 
-- **`authorized_keys`** (your SSH public key) → log in without the password.
-- **`idec_github`** → override the baked deploy key (e.g. a different repo key).
-- **`evohub.conf`** → override hostname / AP name / use Wi-Fi uplink (see
-  `evohub.conf.example` on the partition).
-
-SSH is on with **password auth by default** — user `evohub`, password `evohub` —
-so `ssh evohub@<hub-ip>` always works even without a key.
+SSH uses a **password login** — user `evohub`, password `evohub`. Change it after
+first boot.
 
 ## 4. Boot the Pi
 
@@ -87,7 +83,7 @@ docker compose logs -f listener     # follow a service's logs
 
 - **Services not up / first boot slow** — images are still building. Check
   `systemctl status evohub-build` and `journalctl -u evohub-build`. It needs the
-  ethernet/internet (and a deploy key — baked in, or your override from step 3).
+  ethernet/internet.
 - **No `evo-net` Wi-Fi** — the AP may need tuning on this OS version, but the
   dashboards are still reachable over ethernet, so it won't block you.
 
