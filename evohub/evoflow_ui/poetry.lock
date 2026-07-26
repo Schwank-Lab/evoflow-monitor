@@ -258,7 +258,7 @@ sqlalchemy = ">=2.0.30,<3.0.0"
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/Schwank-Lab/evoflow-monitor.git"
+url = "https://github.com/Schwank-Lab/evoflow-monitor.git"
 reference = "main"
 resolved_reference = "791e0bdcc632db2c269490cbcb48e689eb845782"
 subdirectory = "evohub/evoflow_db"
@@ -278,7 +278,7 @@ python-dotenv = "^1.0.1"
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/Schwank-Lab/evoflow-monitor.git"
+url = "https://github.com/Schwank-Lab/evoflow-monitor.git"
 reference = "main"
 resolved_reference = "791e0bdcc632db2c269490cbcb48e689eb845782"
 subdirectory = "evohub/evoflow_utils"
@@ -1178,4 +1178,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "f6bbcefa4318d3eb05289e7531334b5b018ef9c167e16e148543dacadaeac08d"
+content-hash = "59f86364f5d692e597b350f75d292df18440df1b4ab844a63ae64fd32d0ef86c"
