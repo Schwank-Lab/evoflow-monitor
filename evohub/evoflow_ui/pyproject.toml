@@ -16,8 +16,8 @@ dash-bootstrap-components = ">=1.6.0,<2.0.0"
 psycopg2-binary = ">=2.9.9,<3.0.0"
 pandas = ">=2.2.2,<3.0.0"
 pytest = ">=8.3.2,<9.0.0"
-evoflow_db = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_db" }
-evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
+evoflow_db = { git = "https://github.com/Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_db" }
+evoflow_utils = { git = "https://github.com/Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
 
 [tool.poetry.scripts]
 app = "evoflow_ui.main:main"

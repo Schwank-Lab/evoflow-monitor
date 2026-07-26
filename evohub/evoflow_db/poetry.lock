@@ -15,7 +15,7 @@ python-dotenv = "^1.0.1"
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/Schwank-Lab/evoflow-monitor.git"
+url = "https://github.com/Schwank-Lab/evoflow-monitor.git"
 reference = "main"
 resolved_reference = "791e0bdcc632db2c269490cbcb48e689eb845782"
 subdirectory = "evohub/evoflow_utils"
@@ -293,4 +293,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "ce31758650a8a634d3fbda2e720fc8dec601ef9836b67996c84113a3f15477fb"
+content-hash = "febea3e211963eb11025813787fdbda81daa532c00e024c667a85d38e99f90eb"
