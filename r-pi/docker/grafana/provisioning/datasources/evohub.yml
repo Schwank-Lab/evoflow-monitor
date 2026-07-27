@@ -1,0 +1,23 @@
+# Postgres connection behind every EvoMonitor panel.
+#
+# The uid is pinned because the dashboard panels reference the datasource by
+# uid, not by name — changing it leaves every panel with "datasource not found".
+#
+# Postgres is reached over the compose network by service name, not via the
+# hub's own external IP, which changes with the lab network.
+apiVersion: 1
+
+datasources:
+  - name: evohub-data
+    uid: bdp9peeaxe328b
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: postgres:5432
+    user: ${DB_USER}
+    isDefault: true
+    editable: true
+    jsonData:
+      database: ${DB_NAME}
+      sslmode: disable
+    secureJsonData:
+      password: ${DB_PASS}

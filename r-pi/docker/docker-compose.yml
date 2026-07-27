@@ -41,8 +41,17 @@ services:
       GF_SECURITY_ALLOW_EMBEDDING: "true"
       GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASS}
+      # Read by the provisioned datasource, which keeps the credentials out of
+      # the provisioning file itself.
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
     volumes:
       - grafana_data:/var/lib/grafana
+      # Datasource and dashboards ship with the repo, so a fresh hub serves them
+      # on first boot instead of an empty Grafana.
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"
     networks: [evohub]

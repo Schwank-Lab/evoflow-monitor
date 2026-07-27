@@ -34,6 +34,11 @@ mkdir -p "$STAGE_FILES"
 cp "$HERE/docker/docker-compose.yml" "$STAGE_FILES/docker-compose.yml"
 cp "$HERE/docker/evohub.env"         "$STAGE_FILES/evohub.env"
 
+# Grafana datasource + dashboards, so the hub serves EvoMonitor on first boot
+# instead of an empty Grafana.
+rm -rf "$STAGE_FILES/grafana"
+cp -r "$HERE/docker/grafana" "$STAGE_FILES/grafana"
+
 # Default deploy key baked into the image so the on-Pi build works out of the box.
 # Override per-card with /boot/firmware/idec_github. NOTE: the image then carries
 # this key — keep releases private (or move to path deps to drop it).

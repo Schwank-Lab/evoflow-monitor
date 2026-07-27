@@ -12,6 +12,11 @@ install -d "${ROOTFS_DIR}/opt/evohub/mosquitto/config"
 install -m 0644 files/docker-compose.yml "${ROOTFS_DIR}/opt/evohub/docker-compose.yml"
 install -m 0644 files/evohub.env         "${ROOTFS_DIR}/opt/evohub/.env"
 
+# Grafana datasource + dashboards. The compose file mounts these into the
+# container, so EvoMonitor is there on first boot rather than an empty Grafana.
+install -d "${ROOTFS_DIR}/opt/evohub/grafana"
+cp -r files/grafana/. "${ROOTFS_DIR}/opt/evohub/grafana/"
+
 # App source — listener/UI images are built ON THE PI at first boot (no
 # registry). See evohub-build.service below.
 install -d "${ROOTFS_DIR}/opt/evohub/src"
