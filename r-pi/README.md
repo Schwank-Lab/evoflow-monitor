@@ -121,13 +121,8 @@ On any machine with **Docker** (~10 GB free, ~20–40 min):
 
 ```bash
 cd r-pi
-EVOHUB_DEPLOY_KEY=~/.ssh/idec_github ./build-image.sh    # output: image/.pi-gen/deploy/*.zip
+./build-image.sh    # output: image/.pi-gen/deploy/*.zip
 ```
-
-`EVOHUB_DEPLOY_KEY` (default `~/.ssh/idec_github`) is **baked into the image** so
-the on-Pi build works without the deployer adding anything. ⚠️ Because the image
-carries that key, **keep releases in the private repo** — or switch to local path
-deps (plan §6) to drop the key and make the image safely public.
 
 It uses pi-gen's **`arm64` branch** — important on Apple Silicon: the default
 (32-bit) branch fails on Docker Desktop (`setarch linux32` isn't supported by its
@@ -137,12 +132,9 @@ VM kernel), whereas arm64 builds **natively**. A Linux x86 host or CI works too
 ## Publishing a downloadable image (GitHub Releases)
 
 `.github/workflows/build-image.yml` builds the image in CI and attaches the
-`.img.zip` to a GitHub Release, so deployers can just download it (§1). To set up:
-
-1. Add the deploy key as a repo **Actions secret** named `IDEC_GITHUB_KEY`
-   (Settings → Secrets and variables → Actions).
-2. Push a tag like `image-v1` (or run the workflow manually) — it builds and
-   creates a Release with the image attached.
+`.img.zip` to a GitHub Release, so deployers can just download it (§1). Push a
+tag like `image-v1` (or run the workflow manually) — it builds and creates a
+Release with the image attached.
 
 The image (~900 MB) is well under GitHub's 2 GB release-asset limit.
 
@@ -150,32 +142,31 @@ The image (~900 MB) is well under GitHub's 2 GB release-asset limit.
 
 `image/stage-evohub/00-evohub/01-run.sh` bakes into the rootfs: Docker (official
 repo), log rotation (`daemon.json`), the **`evo-net` AP** (`hostapd` + `dnsmasq` +
-static `wlan0` `192.168.4.1/24` + NAT), the default deploy key, and the systemd
+static `wlan0` `192.168.4.1/24` + NAT), and the systemd
 units (`evohub-firstboot`, `evohub-build`, `evohub-nat`, `evohub`).
 
 **Container build (on the Pi, no registry):** `build-image.sh` stages
-`evohub/{Docker,evoflow_listener,evoflow_ui}` into `/opt/evohub/src`;
-`evohub-build.service` runs once and builds `idec_base` → `evoflow_listener` →
-`evoflow_ui` (using the deploy key for the private git deps), then
-`evohub.service` brings the stack up.
+`evohub/{evoflow_listener,evoflow_ui}` into `/opt/evohub/src`;
+`evohub-build.service` runs once and builds `evoflow_listener` and `evoflow_ui`
+(fetching their `evoflow_db`/`evoflow_utils` dependencies from this repository
+over HTTPS), then `evohub.service` brings the stack up.
 
 ## Changing things
 
 - **Service config / defaults** — `docker/evohub.env`, `docker/docker-compose.yml`.
 - **AP SSID / IP / passphrase** — the `hostapd`/`dnsmasq`/`dhcpcd` blocks in `01-run.sh`.
-- **Python base / build deps** — `evohub/Docker/Dockerfile` (`python:3.12-alpine`).
+- **Python base / build deps** — the `Dockerfile`s in `evohub/evoflow_listener` and
+  `evohub/evoflow_ui` (`python:3.12-alpine`).
 - **Image name / default user / SSH** — `image/config`.
 
 ## Known issues / caveats
 
 - **UI build on Alpine** — `evoflow_ui` pulls `pandas`; compiling on
-  `python:3.12-alpine` can be slow. If painful, switch `idec_base` to
-  `python:3.12-slim` (Debian wheels).
+  `python:3.12-alpine` can be slow. If painful, switch both Dockerfiles
+  to `python:3.12-slim` (Debian wheels).
 - **AP on newer OS** — Bookworm/Trixie default to NetworkManager; we hand `wlan0`
   to hostapd. The most likely thing to need tuning on real hardware.
 - **First boot needs internet** to build the images.
-- **Deploy key in the image** — a consequence of build-on-Pi / no registry; keep
-  releases private, or move to path deps (plan §6).
 
 ## See also
 

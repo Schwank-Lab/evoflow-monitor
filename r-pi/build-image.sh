@@ -39,26 +39,13 @@ cp "$HERE/docker/evohub.env"         "$STAGE_FILES/evohub.env"
 rm -rf "$STAGE_FILES/grafana"
 cp -r "$HERE/docker/grafana" "$STAGE_FILES/grafana"
 
-# Default deploy key baked into the image so the on-Pi build works out of the box.
-# Override per-card with /boot/firmware/idec_github. NOTE: the image then carries
-# this key — keep releases private (or move to path deps to drop it).
-DEPLOY_KEY="${EVOHUB_DEPLOY_KEY:-$HOME/.ssh/idec_github}"
-rm -f "$STAGE_FILES/idec_github"
-if [ -f "$DEPLOY_KEY" ]; then
-  echo "==> baking default deploy key from $DEPLOY_KEY"
-  cp -L "$DEPLOY_KEY" "$STAGE_FILES/idec_github"
-else
-  echo "==> WARNING: no deploy key at $DEPLOY_KEY (set EVOHUB_DEPLOY_KEY); the app"
-  echo "    images won't build unless the deployer drops one on the boot partition."
-fi
-
 echo "==> staging app source (listener/UI build on the Pi at first boot)"
 SRC_OUT="$STAGE_FILES/src"
 rm -rf "$SRC_OUT"; mkdir -p "$SRC_OUT"
-for d in Docker evoflow_listener evoflow_ui; do
-  rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='.pytest_cache' \
-    "$HERE/../evohub/$d" "$SRC_OUT/"
-done
+rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='.pytest_cache' \
+  "$HERE/../evohub/evoflow_listener" "$SRC_OUT/"
+rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='.pytest_cache' \
+  "$HERE/../evohub/evoflow_ui" "$SRC_OUT/"
 
 echo "==> installing config + custom stage into pi-gen"
 cp "$IMAGE_DIR/config" "$PIGEN_DIR/config"

@@ -22,12 +22,6 @@ cp -r files/grafana/. "${ROOTFS_DIR}/opt/evohub/grafana/"
 install -d "${ROOTFS_DIR}/opt/evohub/src"
 cp -r files/src/. "${ROOTFS_DIR}/opt/evohub/src/"
 
-# Default deploy key (baked by build-image.sh). The on-Pi build uses it unless the
-# deployer overrides with /boot/firmware/idec_github (see evohub-build.sh).
-if [ -f files/idec_github ]; then
-  install -D -m 0600 files/idec_github "${ROOTFS_DIR}/opt/evohub/idec_github"
-fi
-
 cat > "${ROOTFS_DIR}/opt/evohub/mosquitto/config/mosquitto.conf" <<'EOF'
 listener 1883 0.0.0.0
 allow_anonymous true
@@ -37,8 +31,7 @@ log_dest stdout
 EOF
 
 # ---------------------------------------------------------------------------
-# 2. Docker log rotation — the SD card filled with 15 GB of logs once and broke
-#    Grafana (see branch claude/keen-maxwell). Cap it by default.
+# 2. Docker log rotation, so container logs cannot fill the SD card.
 # ---------------------------------------------------------------------------
 install -d "${ROOTFS_DIR}/etc/docker"
 cat > "${ROOTFS_DIR}/etc/docker/daemon.json" <<'EOF'
@@ -145,22 +138,13 @@ install -D -m 0644 /dev/stdin "${ROOTFS_DIR}/opt/evohub/evohub.conf.example" <<'
 EOF
 
 # ---------------------------------------------------------------------------
-# 5. Build the app images on the Pi at first boot (no registry).
-#    Needs the GitHub key dropped on the boot partition as
-#    /boot/firmware/idec_github (so poetry can fetch the private git deps),
-#    plus internet. Runs once (guarded by /opt/evohub/.built).
+# 5. Build the app images on the Pi at first boot (no registry). Needs internet.
+#    Runs once (guarded by /opt/evohub/.built).
 # ---------------------------------------------------------------------------
 install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-build.sh" <<'EOF'
 #!/bin/bash
 set -e
 SRC=/opt/evohub/src
-KEY=/boot/firmware/idec_github                  # deployer override (optional)
-[ -f "$KEY" ] || KEY=/opt/evohub/idec_github    # baked default
-if [ ! -f "$KEY" ]; then
-  echo "evohub-build: no deploy key (/boot/firmware/idec_github or baked default)." >&2
-  exit 1
-fi
-docker build --build-arg ssh_private_key="$(cat "$KEY")" -t idec_base "$SRC/Docker"
 docker build -t evoflow_listener "$SRC/evoflow_listener"
 docker build -t evoflow_ui       "$SRC/evoflow_ui"
 touch /opt/evohub/.built

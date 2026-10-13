@@ -3,10 +3,6 @@ name: Build EvoHub image
 # Produces a flashable evohub-*.img.zip and attaches it to a GitHub Release so
 # deployers can download it (see r-pi/README.md). Trigger by pushing a tag like
 # `image-v1`, or run manually from the Actions tab.
-#
-# Requires a repo Actions secret IDEC_GITHUB_KEY = the private deploy key that the
-# on-Pi build uses to fetch evoflow_db / evoflow_utils. It is baked into the image,
-# so keep this repo (and its Releases) private.
 
 on:
   workflow_dispatch:
@@ -27,18 +23,10 @@ jobs:
       - name: Enable arm64 emulation
         run: docker run --privileged --rm tonistiigi/binfmt --install arm64
 
-      - name: Write deploy key
-        env:
-          KEY: ${{ secrets.IDEC_GITHUB_KEY }}
-        run: |
-          mkdir -p "$HOME/.keys"
-          printf '%s\n' "$KEY" > "$HOME/.keys/idec_github"
-          chmod 600 "$HOME/.keys/idec_github"
-
       - name: Build image
         run: |
           cd r-pi
-          EVOHUB_DEPLOY_KEY="$HOME/.keys/idec_github" ./build-image.sh
+          ./build-image.sh
 
       - name: Locate image
         id: img
