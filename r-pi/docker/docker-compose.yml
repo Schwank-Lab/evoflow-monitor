@@ -1,11 +1,15 @@
-# EvoHub stack — merged backend + apps, replaces the separate Portainer stacks.
+# EvoHub stack: database, MQTT broker, Grafana, the MQTT listener and the web UI.
 # Brought up on boot by evohub.service (systemd) -> `docker compose up -d`.
-# Values come from the sibling `.env` (baked public defaults; see evohub.env).
+# Values come from the sibling `.env` (public defaults; see evohub.env).
+#
+# All five images are preloaded into the SD image by build-image.sh, so the hub
+# starts without internet access. Versions are pinned so every hub built from
+# the same commit runs the same software.
 name: evohub
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16.15
     container_name: postgres
     restart: always
     environment:
@@ -16,15 +20,34 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [evohub]
+
+  # Creates the database tables on a fresh hub (tables that already exist are
+  # left alone), before the listener and UI start using them.
+  db-init:
+    image: evoflow_listener:latest
+    pull_policy: never
+    container_name: db_init
+    command: ["poetry", "run", "python", "-m", "evoflow_db.db_create_tables"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks: [evohub]
 
   mosquitto:
-    image: eclipse-mosquitto:2
+    image: eclipse-mosquitto:2.0.22
     container_name: mosquitto
     restart: always
-    # NOTE: separate volumes for config/data/log (the old stack mounted one
-    # named volume at all three paths, which collapsed them — that bug is fixed
-    # here). config is a bind mount so the baked mosquitto.conf ships with the image.
+    # Separate volumes for config, data and logs. config is a bind mount so the
+    # mosquitto.conf written into the image is the one the broker uses.
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
@@ -34,7 +57,7 @@ services:
     networks: [evohub]
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.1.13
     container_name: grafana
     restart: always
     environment:
@@ -57,21 +80,26 @@ services:
     networks: [evohub]
 
   listener:
-    image: evoflow_listener:latest   # built on the Pi at first boot (no registry)
+    image: evoflow_listener:latest   # built by build-image.sh, not in any registry
+    pull_policy: never
     container_name: mqtt_listener
     restart: always
-    # Reach the broker/db over the compose network by service name — NOT via the
-    # hub's own external IP (which is what the committed .env used to hardcode).
+    # The broker and database are reached over the compose network by service name.
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
-    depends_on: [postgres, mosquitto]
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mosquitto:
+        condition: service_started
     networks: [evohub]
 
   ui:
-    image: evoflow_ui:latest         # built on the Pi at first boot (no registry)
+    image: evoflow_ui:latest         # built by build-image.sh, not in any registry
+    pull_policy: never
     container_name: ui
     restart: always
     environment:
@@ -81,7 +109,11 @@ services:
       MQTT_PORT: "1883"
     ports:
       - "8282:8181"
-    depends_on: [postgres, mosquitto]
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mosquitto:
+        condition: service_started
     networks: [evohub]
 
 volumes:

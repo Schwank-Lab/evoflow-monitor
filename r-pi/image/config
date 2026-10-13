@@ -5,6 +5,11 @@ IMG_NAME="evohub"
 RELEASE="trixie"   # matches the pi-gen arm64 branch default
 TARGET_HOSTNAME="evohub"
 
+# Wi-Fi regulatory domain. Required: without it pi-gen leaves Wi-Fi switched off
+# and the evo-net access point never starts. Override per hub with COUNTRY in
+# evohub.conf on the boot partition.
+WPA_COUNTRY="CH"
+
 # Default login. Headless — SSH is enabled below. Change the password, or set a
 # key with PUBKEY_SSH_FIRST_USER, before shipping to anyone outside the lab.
 FIRST_USER_NAME="evohub"
@@ -19,3 +24,7 @@ ENABLE_SSH=1
 
 # Build only up to Lite (stage2) plus our appliance stage — no desktop.
 STAGE_LIST="stage0 stage1 stage2 stage-evohub"
+
+# Deployers download evohub-<date>.img.xz; Raspberry Pi Imager flashes .xz directly.
+DEPLOY_COMPRESSION="xz"
+ARCHIVE_FILENAME="evohub-$(date +%Y-%m-%d)"

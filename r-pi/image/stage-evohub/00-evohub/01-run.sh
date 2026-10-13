@@ -2,7 +2,8 @@
 # EvoHub appliance customisation (pi-gen custom sub-stage, host context).
 #   - ${ROOTFS_DIR}  : the target rootfs we are populating
 #   - on_chroot      : run a command inside that rootfs
-#   - files/*        : staged by build-image.sh (compose, env, app source)
+#   - files/*        : staged by build-image.sh (compose, env, Grafana provisioning)
+#   - /evohub-images : the container images, mounted in by build-image.sh
 # CWD is this sub-stage directory, so `files/...` resolves locally.
 
 # ---------------------------------------------------------------------------
@@ -17,10 +18,10 @@ install -m 0644 files/evohub.env         "${ROOTFS_DIR}/opt/evohub/.env"
 install -d "${ROOTFS_DIR}/opt/evohub/grafana"
 cp -r files/grafana/. "${ROOTFS_DIR}/opt/evohub/grafana/"
 
-# App source — listener/UI images are built ON THE PI at first boot (no
-# registry). See evohub-build.service below.
-install -d "${ROOTFS_DIR}/opt/evohub/src"
-cp -r files/src/. "${ROOTFS_DIR}/opt/evohub/src/"
+# Every container image the stack uses, loaded into Docker at first boot, so the
+# hub never needs internet access.
+install -D -m 0644 /evohub-images/evohub-images.tar \
+  "${ROOTFS_DIR}/opt/evohub/images/evohub-images.tar"
 
 cat > "${ROOTFS_DIR}/opt/evohub/mosquitto/config/mosquitto.conf" <<'EOF'
 listener 1883 0.0.0.0
@@ -42,112 +43,119 @@ cat > "${ROOTFS_DIR}/etc/docker/daemon.json" <<'EOF'
 EOF
 
 # ---------------------------------------------------------------------------
-# 3. Wi-Fi access point on wlan0 (the reactor "local" network).
-#    Hub is the gateway/DHCP server at a FIXED 192.168.4.1; reactors point here.
-#    NOTE: this is the part most likely to need tuning on real hardware
-#    (Bookworm defaults to NetworkManager; we hand wlan0 to hostapd/dhcpcd).
+# 3. evo-net Wi-Fi access point on wlan0.
+#    NetworkManager runs the access point, gives the hub the fixed address
+#    192.168.4.1, hands out addresses to clients (DHCP) and shares any uplink
+#    (ethernet, or Wi-Fi on a USB dongle) with them. EvoBridges and laptops join
+#    evo-net and reach the hub at 192.168.4.1. 2.4 GHz (band bg) so that every
+#    client can join.
 # ---------------------------------------------------------------------------
-cat > "${ROOTFS_DIR}/etc/hostapd/hostapd.conf" <<'EOF'
-country_code=CH
-interface=wlan0
+install -D -m 0600 /dev/stdin \
+  "${ROOTFS_DIR}/etc/NetworkManager/system-connections/evo-net.nmconnection" <<'EOF'
+[connection]
+id=evo-net
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=ap
 ssid=evo-net
-hw_mode=g
-channel=7
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=hungryphage
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-EOF
-cat > "${ROOTFS_DIR}/etc/default/hostapd" <<'EOF'
-DAEMON_CONF="/etc/hostapd/hostapd.conf"
-EOF
+band=bg
+channel=6
 
-install -d "${ROOTFS_DIR}/etc/dnsmasq.d"
-cat > "${ROOTFS_DIR}/etc/dnsmasq.d/evohub.conf" <<'EOF'
-interface=wlan0
-dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
-domain=wlan
-address=/gw.wlan/192.168.4.1
-EOF
+[wifi-security]
+key-mgmt=wpa-psk
+proto=rsn
+pairwise=ccmp
+group=ccmp
+psk=hungryphage
 
-cat >> "${ROOTFS_DIR}/etc/dhcpcd.conf" <<'EOF'
+[ipv4]
+method=shared
+address1=192.168.4.1/24
 
-# EvoHub AP — static IP for wlan0
-interface wlan0
-    static ip_address=192.168.4.1/24
-    nohook wpa_supplicant
-EOF
-
-# Keep NetworkManager (Bookworm default) from managing the AP interface.
-install -d "${ROOTFS_DIR}/etc/NetworkManager/conf.d"
-cat > "${ROOTFS_DIR}/etc/NetworkManager/conf.d/99-evohub-wlan0.conf" <<'EOF'
-[keyfile]
-unmanaged-devices=interface-name:wlan0
-EOF
-
-# IPv4 forwarding for NAT (wlan0 clients -> eth0 uplink).
-cat > "${ROOTFS_DIR}/etc/sysctl.d/99-evohub-routed-ap.conf" <<'EOF'
-net.ipv4.ip_forward=1
+[ipv6]
+method=disabled
 EOF
 
 # ---------------------------------------------------------------------------
-# 4. Optional first-boot overrides from /boot/firmware/evohub.conf
+# 4. Optional overrides from the boot partition (the FAT partition a laptop can
+#    open), applied once at first boot.
 # ---------------------------------------------------------------------------
 install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-firstboot.sh" <<'EOF'
 #!/bin/bash
-# Apply optional boot-partition overrides. Each file is independent; absent -> skip.
+# Apply the overrides a deployer put on the boot partition. Each file is renamed
+# to *.applied afterwards, so later boots leave the configuration alone.
 set -e
 
 CONF=/boot/firmware/evohub.conf
 if [ -f "$CONF" ]; then
   # shellcheck disable=SC1090
   . "$CONF"
-  [ -n "${HOSTNAME:-}" ]      && hostnamectl set-hostname "$HOSTNAME"
-  [ -n "${AP_SSID:-}" ]       && sed -i "s/^ssid=.*/ssid=${AP_SSID}/" /etc/hostapd/hostapd.conf
-  [ -n "${AP_PASSPHRASE:-}" ] && sed -i "s/^wpa_passphrase=.*/wpa_passphrase=${AP_PASSPHRASE}/" /etc/hostapd/hostapd.conf
-  # Wi-Fi uplink instead of ethernet — needs a USB Wi-Fi dongle on wlan1.
-  if [ -n "${UPLINK_WIFI_SSID:-}" ] && [ -n "${UPLINK_WIFI_PASS:-}" ]; then
-    nmcli connection add type wifi ifname wlan1 con-name evohub-uplink \
-      ssid "$UPLINK_WIFI_SSID" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$UPLINK_WIFI_PASS" || true
+  if [ -n "${COUNTRY:-}" ]; then
+    raspi-config nonint do_wifi_country "$COUNTRY"
   fi
+  if [ -n "${HUB_HOSTNAME:-}" ]; then
+    raspi-config nonint do_hostname "$HUB_HOSTNAME"
+    hostnamectl set-hostname "$HUB_HOSTNAME"
+    systemctl try-restart avahi-daemon
+  fi
+  if [ -n "${AP_SSID:-}" ]; then
+    nmcli connection modify evo-net 802-11-wireless.ssid "$AP_SSID"
+  fi
+  if [ -n "${AP_PASSPHRASE:-}" ]; then
+    nmcli connection modify evo-net 802-11-wireless-security.psk "$AP_PASSPHRASE"
+  fi
+  # Wi-Fi uplink instead of ethernet. Needs a USB Wi-Fi dongle (wlan1), because
+  # the on-board radio is busy being the access point.
+  if [ -n "${UPLINK_WIFI_SSID:-}" ]; then
+    nmcli connection add type wifi ifname wlan1 con-name evohub-uplink \
+      ssid "$UPLINK_WIFI_SSID" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$UPLINK_WIFI_PASS"
+  fi
+  nmcli connection up evo-net || true
+  mv "$CONF" "$CONF.applied"
 fi
 
-# Optional: install a user SSH public key (login without the default password).
-if [ -f /boot/firmware/authorized_keys ]; then
-  install -d -m 0700 /home/evohub/.ssh
-  install -m 0600 /boot/firmware/authorized_keys /home/evohub/.ssh/authorized_keys
-  chown -R evohub:evohub /home/evohub/.ssh
+# A public key for SSH login without the default password.
+KEYS=/boot/firmware/authorized_keys
+if [ -f "$KEYS" ]; then
+  install -d -m 0700 -o evohub -g evohub /home/evohub/.ssh
+  install -m 0600 -o evohub -g evohub "$KEYS" /home/evohub/.ssh/authorized_keys
+  mv "$KEYS" "$KEYS.applied"
 fi
 EOF
 
-install -D -m 0644 /dev/stdin "${ROOTFS_DIR}/opt/evohub/evohub.conf.example" <<'EOF'
-# Optional EvoHub overrides. Copy to the SD card's boot partition as `evohub.conf`.
-# Every key is optional; omit to keep the baked defaults.
+install -D -m 0644 /dev/stdin "${ROOTFS_DIR}/boot/firmware/evohub.conf.example" <<'EOF'
+# Optional EvoHub overrides. Copy this file to `evohub.conf` on this partition
+# before the hub's first boot. Every key is optional; leave it commented out to
+# keep the default shown.
 
-# HOSTNAME=evohub
+# Wi-Fi regulatory domain (two-letter country code).
+# COUNTRY=CH
+
+# HUB_HOSTNAME=evohub
+
+# The hub's own Wi-Fi network, which EvoBridges and laptops join.
 # AP_SSID=evo-net
 # AP_PASSPHRASE=hungryphage
 
-# Wi-Fi uplink instead of ethernet (requires a USB Wi-Fi dongle on wlan1):
+# Wi-Fi uplink instead of ethernet (requires a USB Wi-Fi dongle):
 # UPLINK_WIFI_SSID=MyLabWifi
 # UPLINK_WIFI_PASS=secret
 EOF
 
 # ---------------------------------------------------------------------------
-# 5. Build the app images on the Pi at first boot (no registry). Needs internet.
-#    Runs once (guarded by /opt/evohub/.built).
+# 5. Load the preloaded container images into Docker at first boot.
 # ---------------------------------------------------------------------------
-install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-build.sh" <<'EOF'
+install -D -m 0755 /dev/stdin "${ROOTFS_DIR}/usr/local/sbin/evohub-load.sh" <<'EOF'
 #!/bin/bash
+# Load the container images shipped in the SD image into Docker, then delete the
+# tarball to free its space on the card.
 set -e
-SRC=/opt/evohub/src
-docker build -t evoflow_listener "$SRC/evoflow_listener"
-docker build -t evoflow_ui       "$SRC/evoflow_ui"
-touch /opt/evohub/.built
+docker load -i /opt/evohub/images/evohub-images.tar
+rm /opt/evohub/images/evohub-images.tar
+touch /opt/evohub/.loaded
 EOF
 
 # ---------------------------------------------------------------------------
@@ -155,9 +163,9 @@ EOF
 # ---------------------------------------------------------------------------
 cat > "${ROOTFS_DIR}/etc/systemd/system/evohub-firstboot.service" <<'EOF'
 [Unit]
-Description=EvoHub first-boot overrides (optional /boot/firmware/{evohub.conf,authorized_keys})
-After=local-fs.target
-Before=hostapd.service dnsmasq.service evohub.service
+Description=EvoHub overrides from the boot partition (evohub.conf, authorized_keys)
+Wants=NetworkManager.service
+After=NetworkManager.service
 ConditionPathExists=|/boot/firmware/evohub.conf
 ConditionPathExists=|/boot/firmware/authorized_keys
 
@@ -170,33 +178,17 @@ ExecStart=/usr/local/sbin/evohub-firstboot.sh
 WantedBy=multi-user.target
 EOF
 
-cat > "${ROOTFS_DIR}/etc/systemd/system/evohub-build.service" <<'EOF'
+cat > "${ROOTFS_DIR}/etc/systemd/system/evohub-load.service" <<'EOF'
 [Unit]
-Description=EvoHub build app images (listener, UI) on the Pi
+Description=EvoHub load the preloaded container images into Docker
 Requires=docker.service
-After=docker.service network-online.target evohub-firstboot.service
-Wants=network-online.target
-ConditionPathExists=!/opt/evohub/.built
+After=docker.service
+ConditionPathExists=!/opt/evohub/.loaded
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/local/sbin/evohub-build.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cat > "${ROOTFS_DIR}/etc/systemd/system/evohub-nat.service" <<'EOF'
-[Unit]
-Description=EvoHub NAT (wlan0 reactor clients -> eth0 uplink)
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/sh -c 'iptables -t nat -C POSTROUTING -o eth0 -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE'
+ExecStart=/usr/local/sbin/evohub-load.sh
 
 [Install]
 WantedBy=multi-user.target
@@ -206,8 +198,8 @@ cat > "${ROOTFS_DIR}/etc/systemd/system/evohub.service" <<'EOF'
 [Unit]
 Description=EvoHub docker compose stack
 Requires=docker.service
-After=docker.service network-online.target evohub-build.service
-Wants=network-online.target
+Wants=evohub-load.service
+After=docker.service evohub-load.service
 
 [Service]
 Type=oneshot
@@ -234,8 +226,5 @@ apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 usermod -aG docker ${FIRST_USER_NAME}
 
-systemctl unmask hostapd
-rfkill unblock wlan || true
-systemctl enable hostapd dnsmasq docker \
-  evohub-firstboot.service evohub-build.service evohub-nat.service evohub.service
+systemctl enable docker evohub-firstboot.service evohub-load.service evohub.service
 EOF
