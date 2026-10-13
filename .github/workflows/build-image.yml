@@ -1,46 +1,81 @@
-name: Build EvoHub image
+name: Build appliance images
 
-# Produces a flashable evohub-*.img.zip and attaches it to a GitHub Release so
-# deployers can download it (see r-pi/README.md). Trigger by pushing a tag like
-# `image-v1`, or run manually from the Actions tab.
+# Builds the flashable EvoHub and EvoBridge images (evohub-<date>.img.xz,
+# evobridge-<date>.img.xz; see r-pi/README.md).
+#   - pull request touching the images: builds both, kept as workflow artifacts
+#   - tag like `image-v1`: builds both and attaches them to a GitHub Release
+#   - manual run from the Actions tab: builds both, kept as workflow artifacts
 
 on:
   workflow_dispatch:
   push:
     tags: ['image-v*']
+  pull_request:
+    paths:
+      - 'r-pi/**'
+      - 'evohub/**'
+      - '.github/workflows/build-image.yml'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest        # x86 — arm64 image built via qemu (see note below)
-    timeout-minutes: 180
-    permissions:
-      contents: write             # create the release / upload the asset
+  hub:
+    runs-on: ubuntu-24.04-arm      # native arm64, like the Raspberry Pi: no emulation
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
-      # The arm64 image is emulated on x86 runners (slow). If your plan has native
-      # arm64 runners, set `runs-on: ubuntu-24.04-arm` above and delete this step.
-      - name: Enable arm64 emulation
-        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
-
-      - name: Build image
+      # pi-gen keeps a root filesystem per stage, plus the preloaded container
+      # images; the runner's preinstalled toolchains are not needed.
+      - name: Free disk space
         run: |
-          cd r-pi
-          ./build-image.sh
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h /
 
-      - name: Locate image
-        id: img
-        run: echo "path=$(ls r-pi/image/.pi-gen/deploy/image_*-evohub.zip)" >> "$GITHUB_OUTPUT"
+      - name: Build EvoHub image
+        run: cd r-pi && ./build-image.sh
 
-      - name: Attach to Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.img.outputs.path }}
-
-      - name: Upload as artifact (manual run)
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: evohub-image
-          path: ${{ steps.img.outputs.path }}
+          path: r-pi/image/.pi-gen/deploy/*.img.xz
+          compression-level: 0       # already xz-compressed
+
+  bridge:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h /
+
+      - name: Build EvoBridge image
+        run: cd r-pi && ./build-bridge-image.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evobridge-image
+          path: r-pi/image/.pi-gen-evobridge/deploy/*.img.xz
+          compression-level: 0
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [hub, bridge]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write             # create the release / upload the assets
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: images
+          merge-multiple: true
+
+      - name: Checksums
+        run: cd images && sha256sum *.img.xz > SHA256SUMS
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            images/*.img.xz
+            images/SHA256SUMS

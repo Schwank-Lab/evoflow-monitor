@@ -172,8 +172,10 @@ kernel), whereas arm64 builds natively.
 
 ## Publishing (GitHub Releases)
 
-`.github/workflows/build-image.yml` builds the images in CI and attaches them to
-a GitHub Release. Push a tag like `image-v1` (or run the workflow manually).
+`.github/workflows/build-image.yml` builds both images on native arm64 runners.
+Pull requests that touch the images build them as a check (downloadable from the
+run's artifacts); pushing a tag like `image-v1` attaches them, with checksums,
+to a GitHub Release.
 
 ## How the hub image is assembled
 
