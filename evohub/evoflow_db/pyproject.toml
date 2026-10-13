@@ -12,7 +12,7 @@ requires-python = "^3.12"
 python = ">=3.12,<4.0"
 sqlalchemy = ">=2.0.30,<3.0.0"
 psycopg2-binary = ">=2.9.9,<3.0.0"
-evoflow_utils = { git = "git@github.com:Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
+evoflow_utils = { git = "https://github.com/Schwank-Lab/evoflow-monitor.git", branch = "main", subdirectory = "evohub/evoflow_utils" }
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

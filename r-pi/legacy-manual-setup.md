@@ -21,20 +21,7 @@ Then SSH in and run:
 
 ```bash
 sudo apt install git
-mkdir ~/.ssh && cd ~/.ssh && ssh-keygen -t ed25519 -f idec_github
-```
-
-In `~/.ssh`, create `config`:
-```
-Host *.github.com
-    AddKeysToAgent yes
-    IdentityFile ~/.ssh/idec_github
-```
-
-```bash
-eval `ssh-agent -s`
-ssh-add ~/.ssh/idec_github
-git clone git@github.com:Schwank-Lab/evoflow-monitor.git && cd evoflow-monitor/r-pi
+git clone https://github.com/Schwank-Lab/evoflow-monitor.git && cd evoflow-monitor/r-pi
 sudo chmod +x installme.sh && ./installme.sh   # reboots when done
 ```
 
