@@ -71,6 +71,13 @@ cd "$PIGEN_DIR"
 docker rm -v pigen_work >/dev/null 2>&1 || true   # clear any stale container from a prior run
 PIGEN_DOCKER_OPTS="--volume $IMAGES_DIR:/evohub-images:ro" CONTINUE=0 ./build-docker.sh
 
+# pi-gen only runs executable stage scripts and merely logs the ones it skips,
+# which would leave the image silently incomplete.
+if grep "(not executable)" "$PIGEN_DIR/deploy/build.log"; then
+  echo "==> ERROR: pi-gen skipped the stage scripts above; make them executable." >&2
+  exit 1
+fi
+
 echo
 echo "==> done. Flashable image:"
 ls -1 "$PIGEN_DIR/deploy/"*.img.xz
