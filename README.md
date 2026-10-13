@@ -15,7 +15,10 @@ control commands back to the reactors.
 ## Architecture
 
 ```
-                Reactors  (Raspberry Pi Pico W)
+          Reactors  (Raspberry Pi Pico, USB serial)
+                    │                ▲
+                    ▼                │
+          EvoBridges  (one Raspberry Pi per reactor)
                     │                ▲
        status/experiment        commands
        status/reactor               │
@@ -47,13 +50,15 @@ control commands back to the reactors.
 
 ### How messages flow
 
-Everything is MQTT publish/subscribe through Mosquitto:
+A reactor talks to its EvoBridge over USB serial; the bridge relays every message
+to and from the hub. Everything between bridges and hub is MQTT
+publish/subscribe through Mosquitto:
 
 | Topic | Direction | Payload | Consumer |
 |---|---|---|---|
-| `status/experiment` | reactor → hub | OD / temp / dilution / flow-rate, + `experiment_id`, timestamp | **listener** → persisted to `experiment_state` |
-| `status/reactor` | reactor → hub | live reactor state, keyed by `reactor_id` | **UI** (kept in memory, ~10 s) |
-| `commands` | hub → reactor | `{reactor_id, command, …}` (start/stop/pause, new/update experiment) | reactors |
+| `status/experiment` | reactor → bridge → hub | OD / temp / dilution / flow-rate, + `experiment_id`, timestamp | **listener** → persisted to `experiment_state` |
+| `status/reactor` | reactor → bridge → hub | live reactor state, keyed by `reactor_id` | **UI** (kept in memory, ~10 s) |
+| `commands` | hub → bridge → reactor | `{reactor_id, command, …}` (start/stop/pause, new/update experiment) | reactors |
 
 So telemetry flows **reactor → `status/experiment` → listener → DB → Grafana**,
 and control flows the other way: **UI → `commands` → reactor**.
@@ -68,9 +73,9 @@ and `reactor` ─< `reactor_config`. SQLAlchemy models live in `evohub/evoflow_d
 The hub is just a set of Docker services, so it can run on any always-on Linux
 box. The **supported deployment is a self-contained Raspberry Pi appliance**: a
 pre-built SD image that boots straight into the whole stack and also acts as the
-reactor fleet's Wi-Fi access point.
+fleet's Wi-Fi access point, plus a matching EvoBridge image for each reactor.
 
-➡️ **See [`r-pi/`](./r-pi)** for the appliance — download, flash, boot.
+➡️ **See [`r-pi/`](./r-pi)** for the appliances — download, flash, boot.
 
 The earlier from-scratch manual process is preserved in
 [`r-pi/legacy-manual-setup.md`](./r-pi/legacy-manual-setup.md) (superseded).
@@ -81,4 +86,4 @@ The earlier from-scratch manual process is preserved in
 |---|---|
 | `evohub/` | the hub services + shared packages (`evoflow_listener`, `evoflow_ui`, `evoflow_db`, `evoflow_utils`) |
 | `r-pi/` | the Raspberry Pi appliance deployment (image build + docs) |
-| `fake_reactor/` | replays recorded data onto MQTT to exercise the pipeline without hardware |
+| `fake_reactor/` | simulates a reactor (registers an experiment, streams data) to test a hub without hardware |

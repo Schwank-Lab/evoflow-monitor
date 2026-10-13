@@ -1,174 +1,214 @@
-# EvoHub on Raspberry Pi (appliance)
+# EvoHub and EvoBridge on Raspberry Pi (appliances)
 
-This is one **deployment** of EvoHub — packaged as a self-contained Raspberry Pi
-appliance. Flash a pre-built SD image, plug the Pi into ethernet + power, and it
-boots into the complete hub and runs as the reactor fleet's Wi-Fi access point
-(`evo-net`). No monitor, no keyboard, no manual setup.
+Two pre-built SD card images:
+
+- **EvoHub** — collects, stores and shows the data of a whole reactor fleet. It
+  runs Postgres, the Mosquitto MQTT broker, Grafana (EvoMonitor), the MQTT
+  listener and the web UI, and creates its own Wi-Fi network, **`evo-net`**.
+- **EvoBridge** — one per reactor. Plugged into an EvoFlow reactor by USB, it
+  joins `evo-net` and forwards the reactor's state to the hub, and the hub's
+  commands back to the reactor.
+
+Flash, power on, done: no monitor, no keyboard, no internet needed. Both images
+come pre-paired — a bridge finds a hub with the default settings by itself.
 
 > For **what EvoHub is and how it works** (components, message flow, data model),
-> see the [top-level README](../README.md). This page is just how to run it on a Pi.
+> see the [top-level README](../README.md). This page is how to run it on Pis.
 
 ---
 
-# Deploying a hub
+# Deploying
 
-For anyone setting up an EvoHub. You need a Raspberry Pi (4 or 5), an SD card
-(≥8 GB), and an ethernet cable.
+You need one Raspberry Pi 5 (or 4) for the hub, one per reactor for the bridges,
+and a microSD card (≥16 GB) for each.
 
-## 1. Download the image
+## 1. Download the images
 
-Grab the latest `evohub-<date>.img.zip` from the repo's
-**[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**. That's
-the only file you need — all the config is already baked in.
+From the repo's **[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**:
+`evohub-<date>.img.xz` and `evobridge-<date>.img.xz`. Everything is baked in.
 
-## 2. Flash the image (command line)
+## 2. Flash the cards
 
-Find the SD card, then write the image. **macOS:**
+**Raspberry Pi Imager** (recommended — it lists cards by name): *Choose OS* →
+*Use custom* → pick the `.img.xz`; *Choose storage* → the card; *Next*. When asked
+**"Would you like to apply OS customisation settings?" choose _No_** — the
+images configure themselves, and customisation would switch the hub's Wi-Fi from
+access point to client.
+
+Or from the command line (macOS):
 
 ```bash
 diskutil list external physical              # find the card → note its diskN (e.g. disk7)
 diskutil unmountDisk /dev/diskN
-unzip -p evohub-*.img.zip | sudo dd of=/dev/rdiskN bs=4m    # Ctrl-T shows progress
+xz -dc evohub-*.img.xz | sudo dd of=/dev/rdiskN bs=4m    # Ctrl-T shows progress
 ```
 
-**Linux:**
-```bash
-lsblk                                         # find the card → /dev/sdX
-unzip -p evohub-*.img.zip | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
-```
-
-⚠️ Double-check the device — `dd` to the wrong disk wipes it. (If you'd rather not
-risk it, the **Raspberry Pi Imager** GUI lists the card by name and works too.)
+⚠️ Double-check the device — `dd` to the wrong disk wipes it.
 
 ## 3. (Optional) override defaults
 
-The image works as-is — skip this unless you want to change something. Before
-first boot, mount the `bootfs` partition (macOS: `/Volumes/bootfs`) and drop an
-**`evohub.conf`** on it to override the hostname, AP name/password, or to use a
-Wi-Fi uplink instead of ethernet (see `evohub.conf.example` on the partition).
+The images work as-is. To change something, open the card's boot partition
+(macOS: `/Volumes/bootfs`) before the first boot and copy the example file there
+to its real name, then edit it:
 
-SSH uses a **password login** — user `evohub`, password `evohub`. Change it after
-first boot.
+- hub: `evohub.conf.example` → `evohub.conf` — country, hostname, `evo-net` name
+  and password, or a Wi-Fi uplink (needs a USB Wi-Fi dongle).
+- bridge: `evobridge.conf.example` → `evobridge.conf` — country, the hub's Wi-Fi
+  name and password (if you changed them on the hub), MQTT broker address.
 
-## 4. Boot the Pi
+To log in over SSH with a key instead of the default password, also put your
+public key on the boot partition as `authorized_keys`.
 
-Card into the Pi → **ethernet cable** (the first boot builds the app images and
-needs internet) → **power**. The first boot takes a few minutes to build, then
-starts everything; the `evo-net` Wi-Fi appears once it's up.
+## 4. Start the hub
 
-## 5. Open the dashboards
+Card in → power. Ethernet is optional: connected, the hub shares its internet
+with `evo-net` and keeps its clock correct. The first boot loads the container
+images (a few minutes); then the **`evo-net`** Wi-Fi appears.
 
-Find the hub's IP on your network (try `ssh evohub@evohub.local`, or your router's
-device list), then:
+Join `evo-net` (password `hungryphage`) from a laptop and open:
 
-- **Grafana** — `http://<hub-ip>:3000`  (login `admin` / `veryhungryphage`)
-- **UI** — `http://<hub-ip>:8282`
+- **Grafana / EvoMonitor** — `http://192.168.4.1:3000` (login `admin` / `veryhungryphage`)
+- **UI** — `http://192.168.4.1:8282`
 
-## 6. Connect reactors
+Over ethernet, the hub is also at `http://evohub.local:3000` (or its IP from the
+router's device list).
 
-Reactors join the **`evo-net`** Wi-Fi (password `hungryphage`) and reach the hub
-at the fixed address **`192.168.4.1`**. Set this once in the reactor repo's
-`pico/configs/default-network_config.json` → `"mqtt_host": "192.168.4.1"`.
+## 5. Connect the reactors
 
-## Operating the hub
+For each reactor: card into a bridge Pi → reactor's USB into the bridge → power.
+The bridge names itself `evobridge-<6 hex digits of its serial number>`, joins
+`evo-net` and starts forwarding. Data appears in EvoMonitor once an experiment is
+running.
+
+Evotool (on a laptop joined to `evo-net`) reaches the hub's database at
+`192.168.4.1` by default — needed for `evotool.py register` and
+`evotool.py experiment new`. From the lab network instead, set `DB_HOST` and
+`MQTT_HOST` to the hub's address.
+
+## 6. Test without a reactor
+
+[`fake_reactor`](../fake_reactor) registers a simulated reactor and experiment on
+the hub and streams turbidostat-like data, so you can check the whole hub before
+any hardware is ready. From a laptop on `evo-net`:
 
 ```bash
-ssh evohub@<hub-ip>                 # password: evohub
+cd fake_reactor && poetry install
+poetry run fake-reactor                      # Ctrl+C to stop
+```
+
+Then pick the `fake-…` experiment in EvoMonitor.
+
+## Operating
+
+```bash
+ssh evohub@192.168.4.1              # password: evohub (or evohub@evohub.local)
 cd /opt/evohub
-docker compose ps                   # are all 5 services Up?
+docker compose ps                   # postgres, mosquitto, grafana, listener, ui Up; db-init Exited (0)
 docker compose logs -f listener     # follow a service's logs
+
+ssh evobridge@<bridge>.local        # password: evobridge
+systemctl status evobridge          # journalctl -u evobridge -f for its log
 ```
 
 ## If something's off
 
-- **Services not up / first boot slow** — images are still building. Check
-  `systemctl status evohub-build` and `journalctl -u evohub-build`. It needs the
-  ethernet/internet.
-- **No `evo-net` Wi-Fi** — the AP may need tuning on this OS version, but the
-  dashboards are still reachable over ethernet, so it won't block you.
+- **No `evo-net` Wi-Fi** — wait a minute after power-on; check
+  `nmcli connection show --active` on the hub (via ethernet).
+- **Services not up** — the first boot loads the images: `systemctl status evohub-load`.
+- **Dashboard empty although data arrives** — EvoMonitor plots data by the hub's
+  clock. A Pi has no battery-backed clock by default, so after a power cut
+  without internet its time is wrong. Connect ethernet, fit a Raspberry Pi RTC
+  battery, or set the time: `ssh evohub@192.168.4.1 sudo date -s "<now>"`.
+- **Bridge not forwarding** — `journalctl -u evobridge -f`; it retries every 10 s
+  until the reactor is plugged in and the hub is reachable.
 
 ## Network reference
 
 | Who talks | To what address |
 |---|---|
 | hub's own containers (listener/UI → Postgres/Mosquitto) | compose service names (`postgres`, `mosquitto`) |
-| reactors → broker | the fixed AP gateway `192.168.4.1` |
-| you → Grafana / UI | the hub's IP on your network (DHCP — look it up) |
+| bridges → MQTT broker, Evotool → database | `192.168.4.1` (the hub on `evo-net`) |
+| you → Grafana / UI | `192.168.4.1` on `evo-net`; `evohub.local` or the hub's IP on ethernet |
 
 ---
 
 # For developers
 
-For building or modifying the appliance image. Design rationale and open
-decisions are in [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md).
+For building or modifying the images. Design rationale is in
+[`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md).
 
 ## Layout
 
 ```
 r-pi/
-  build-image.sh          # builds the image (pi-gen in Docker)
+  build-image.sh          # builds the EvoHub image
+  build-bridge-image.sh   # builds the EvoBridge image
   docker/
-    docker-compose.yml    # merged backend + apps stack (also usable standalone)
+    docker-compose.yml    # the hub's stack (also usable on any Docker host)
     evohub.env            # baked public defaults
+    grafana/              # provisioned datasource + EvoMonitor dashboard
   image/
-    config                # pi-gen config (image name, hostname, user, ssh)
-    stage-evohub/         # pi-gen custom stage that bakes everything in
+    config                # pi-gen config, hub
+    config-evobridge      # pi-gen config, bridge
+    stage-evohub/         # pi-gen custom stage for the hub
+    stage-evobridge/      # pi-gen custom stage for the bridge
 ```
 
-## Build the image locally
+## Build the images locally
 
-On any machine with **Docker** (~10 GB free, ~20–40 min):
+On a machine with **Docker 28+** that can run `linux/arm64` containers (Apple
+Silicon natively; elsewhere via qemu), ~15 GB free per image, ~20–60 min each:
 
 ```bash
 cd r-pi
-./build-image.sh    # output: image/.pi-gen/deploy/*.zip
+./build-image.sh                                # → image/.pi-gen/deploy/evohub-<date>.img.xz
+./build-bridge-image.sh                         # → image/.pi-gen-evobridge/deploy/evobridge-<date>.img.xz
+REACTOR_REF=<branch|tag|commit> ./build-bridge-image.sh   # bridge code from another evoflow-reactor ref
 ```
 
-It uses pi-gen's **`arm64` branch** — important on Apple Silicon: the default
-(32-bit) branch fails on Docker Desktop (`setarch linux32` isn't supported by its
-VM kernel), whereas arm64 builds **natively**. A Linux x86 host or CI works too
-(via qemu).
+Both use pi-gen's **`arm64` branch** — on Apple Silicon the default (32-bit)
+branch fails on Docker Desktop (`setarch linux32` isn't supported by its VM
+kernel), whereas arm64 builds natively.
 
-## Publishing a downloadable image (GitHub Releases)
+## Publishing (GitHub Releases)
 
-`.github/workflows/build-image.yml` builds the image in CI and attaches the
-`.img.zip` to a GitHub Release, so deployers can just download it (§1). Push a
-tag like `image-v1` (or run the workflow manually) — it builds and creates a
-Release with the image attached.
+`.github/workflows/build-image.yml` builds the images in CI and attaches them to
+a GitHub Release. Push a tag like `image-v1` (or run the workflow manually).
 
-The image (~900 MB) is well under GitHub's 2 GB release-asset limit.
+## How the hub image is assembled
 
-## How the appliance is assembled
+`build-image.sh` builds the listener and UI images and pulls Postgres, Mosquitto
+and Grafana (all `linux/arm64`, versions pinned in `docker-compose.yml`), and
+saves every image the compose file uses into one tarball. pi-gen then builds
+Raspberry Pi OS Lite plus `image/stage-evohub/00-evohub/01-run.sh`, which adds:
+Docker (official repo), log rotation, the compose stack in `/opt/evohub`, the
+image tarball, the **`evo-net` access point** (one NetworkManager connection:
+`192.168.4.1/24`, DHCP and NAT to any uplink), and the systemd units
+`evohub-firstboot` (boot-partition overrides), `evohub-load` (`docker load` on
+first boot) and `evohub` (`docker compose up`). On start, the `db-init` service
+creates the database tables before the listener and UI start.
 
-`image/stage-evohub/00-evohub/01-run.sh` bakes into the rootfs: Docker (official
-repo), log rotation (`daemon.json`), the **`evo-net` AP** (`hostapd` + `dnsmasq` +
-static `wlan0` `192.168.4.1/24` + NAT), and the systemd
-units (`evohub-firstboot`, `evohub-build`, `evohub-nat`, `evohub`).
+## How the bridge image is assembled
 
-**Container build (on the Pi, no registry):** `build-image.sh` stages
-`evohub/{evoflow_listener,evoflow_ui}` into `/opt/evohub/src`;
-`evohub-build.service` runs once and builds `evoflow_listener` and `evoflow_ui`
-(fetching their `evoflow_db`/`evoflow_utils` dependencies from this repository
-over HTTPS), then `evohub.service` brings the stack up.
+`build-bridge-image.sh` fetches `pico-bridge/` from evoflow-reactor at
+`REACTOR_REF`. pi-gen builds Raspberry Pi OS Lite plus
+`image/stage-evobridge/00-evobridge/01-run.sh`, which adds the bridge code in
+`/opt/evobridge`, its two Python dependencies from Debian (`python3-serial`,
+`python3-paho-mqtt`), a NetworkManager connection that joins `evo-net`, and the
+systemd units `evobridge-firstboot` (unique hostname, boot-partition overrides)
+and `evobridge` (the bridge itself, restarted until it connects).
 
 ## Changing things
 
 - **Service config / defaults** — `docker/evohub.env`, `docker/docker-compose.yml`.
-- **AP SSID / IP / passphrase** — the `hostapd`/`dnsmasq`/`dhcpcd` blocks in `01-run.sh`.
-- **Python base / build deps** — the `Dockerfile`s in `evohub/evoflow_listener` and
-  `evohub/evoflow_ui` (`python:3.12-alpine`).
-- **Image name / default user / SSH** — `image/config`.
-
-## Known issues / caveats
-
-- **UI build on Alpine** — `evoflow_ui` pulls `pandas`; compiling on
-  `python:3.12-alpine` can be slow. If painful, switch both Dockerfiles
-  to `python:3.12-slim` (Debian wheels).
-- **AP on newer OS** — Bookworm/Trixie default to NetworkManager; we hand `wlan0`
-  to hostapd. The most likely thing to need tuning on real hardware.
-- **First boot needs internet** to build the images.
+- **Service versions** — the image tags in `docker/docker-compose.yml`.
+- **`evo-net` name / password / address** — the `evo-net.nmconnection` blocks in
+  both `01-run.sh` files (keep hub and bridge in step).
+- **Python base / build deps** — the `Dockerfile`s in `evohub/evoflow_listener`
+  and `evohub/evoflow_ui` (`python:3.12-alpine`).
+- **Image name / default user / SSH** — `image/config`, `image/config-evobridge`.
 
 ## See also
 
-- [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md) — full design + decisions.
+- [`IMAGE_DEPLOYMENT_PLAN.md`](./IMAGE_DEPLOYMENT_PLAN.md) — design and decisions.
 - [`legacy-manual-setup.md`](./legacy-manual-setup.md) — the pre-appliance manual process.
