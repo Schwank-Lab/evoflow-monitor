@@ -14,6 +14,8 @@
 # ---------------------------------------------------------------------------
 install -d "${ROOTFS_DIR}/opt/evobridge"
 cp -r files/pico-bridge "${ROOTFS_DIR}/opt/evobridge/"
+# Which release this bridge runs: cat /opt/evobridge/VERSION
+install -m 0644 files/VERSION "${ROOTFS_DIR}/opt/evobridge/VERSION"
 on_chroot <<EOF
 chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /opt/evobridge
 EOF

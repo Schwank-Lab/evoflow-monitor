@@ -25,7 +25,8 @@ and a microSD card (≥16 GB) for each.
 ## 1. Download the images
 
 From the repo's **[Releases](https://github.com/Schwank-Lab/evoflow-monitor/releases)**:
-`evohub-<date>.img.xz` and `evobridge-<date>.img.xz`. Everything is baked in.
+`evohub-<version>.img.xz` and `evobridge-<version>.img.xz` (e.g. `v1.0.0`) from the
+same release. Everything is baked in.
 
 ## 2. Flash the cards
 
@@ -105,6 +106,7 @@ It is the newest experiment, so EvoMonitor shows it straight away.
 ```bash
 ssh evohub@192.168.4.1              # password: evohub (or evohub@evohub.local)
 cd /opt/evohub
+cat VERSION                         # which release this hub runs
 docker compose ps                   # postgres, mosquitto, grafana, listener, ui Up; db-init Exited (0)
 docker compose logs -f listener     # follow a service's logs
 
@@ -165,6 +167,7 @@ Silicon natively; elsewhere via qemu), ~15 GB free per image, ~20–60 min each:
 cd r-pi
 ./build-image.sh                                # → image/.pi-gen/deploy/evohub-<date>.img.xz
 ./build-bridge-image.sh                         # → image/.pi-gen-evobridge/deploy/evobridge-<date>.img.xz
+IMAGE_VERSION=v1.1.0 ./build-image.sh           # → …/evohub-v1.1.0.img.xz
 REACTOR_REF=<branch|tag|commit> ./build-bridge-image.sh   # bridge code from another evoflow-reactor ref
 ```
 
@@ -176,8 +179,10 @@ kernel), whereas arm64 builds natively.
 
 `.github/workflows/build-image.yml` builds both images on native arm64 runners.
 Pull requests that touch the images build them as a check (downloadable from the
-run's artifacts); pushing a tag like `image-v1` attaches them, with checksums,
-to a GitHub Release.
+run's artifacts, versioned `dev-<commit>`); pushing a version tag like `v1.0.0`
+builds them as `evohub-v1.0.0.img.xz` / `evobridge-v1.0.0.img.xz` and attaches
+them, with checksums, to a GitHub Release. Each image records its version in
+`/opt/evohub/VERSION` or `/opt/evobridge/VERSION`.
 
 ## How the hub image is assembled
 

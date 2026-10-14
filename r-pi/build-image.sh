@@ -14,9 +14,10 @@
 #   - ~15 GB free disk and ~30-60 min
 #
 # Usage:
-#   ./build-image.sh
+#   ./build-image.sh                        # version = today's date
+#   IMAGE_VERSION=v1.0.0 ./build-image.sh   # CI passes the release tag
 # Output:
-#   r-pi/image/.pi-gen/deploy/*-evohub.img.xz
+#   r-pi/image/.pi-gen/deploy/evohub-<version>.img.xz
 #
 set -euo pipefail
 
@@ -26,6 +27,8 @@ PIGEN_DIR="${PIGEN_DIR:-$IMAGE_DIR/.pi-gen}"
 PIGEN_BRANCH="${PIGEN_BRANCH:-arm64}"   # 64-bit: native on Apple Silicon + no 32-bit setarch path
 COMPOSE="$HERE/docker/docker-compose.yml"
 ENV_FILE="$HERE/docker/evohub.env"
+# Names the image file and is recorded in the image as /opt/evohub/VERSION.
+IMAGE_VERSION="${IMAGE_VERSION:-$(date +%Y-%m-%d)}"
 # Kept outside the pi-gen tree: pi-gen copies its whole tree into a Docker build
 # context, so the image tarball is mounted into the build container instead.
 IMAGES_DIR="$IMAGE_DIR/.images"
@@ -43,6 +46,7 @@ cp "$ENV_FILE" "$STAGE_FILES/evohub.env"
 # Grafana datasource + dashboards, so the hub serves EvoMonitor on first boot
 # instead of an empty Grafana.
 cp -r "$HERE/docker/grafana" "$STAGE_FILES/grafana"
+echo "$IMAGE_VERSION" > "$STAGE_FILES/VERSION"
 
 echo "==> building the listener and UI images (linux/arm64)"
 docker build --platform linux/arm64 -t evoflow_listener:latest "$HERE/../evohub/evoflow_listener"
@@ -61,6 +65,7 @@ ls -lh "$IMAGES_DIR/evohub-images.tar"
 
 echo "==> installing config + custom stage into pi-gen"
 cp "$IMAGE_DIR/config" "$PIGEN_DIR/config"
+echo "ARCHIVE_FILENAME=\"evohub-$IMAGE_VERSION\"" >> "$PIGEN_DIR/config"
 rm -rf "$PIGEN_DIR/stage-evohub"
 cp -r "$IMAGE_DIR/stage-evohub" "$PIGEN_DIR/stage-evohub"
 # Only the EvoHub image is exported, not the intermediate Lite image.
@@ -80,5 +85,5 @@ fi
 
 echo
 echo "==> done. Flashable image:"
-ls -1 "$PIGEN_DIR/deploy/"*.img.xz
+ls -1 "$PIGEN_DIR/deploy/evohub-$IMAGE_VERSION.img.xz"
 echo "Flash with Raspberry Pi Imager, or see r-pi/README.md for dd."

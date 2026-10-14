@@ -12,10 +12,11 @@
 # ~10 GB free disk and ~20-40 min.
 #
 # Usage:
-#   ./build-bridge-image.sh                         # evoflow-reactor master
+#   ./build-bridge-image.sh                         # evoflow-reactor master, version = today's date
 #   REACTOR_REF=<branch, tag or commit> ./build-bridge-image.sh
+#   IMAGE_VERSION=v1.0.0 ./build-bridge-image.sh    # CI passes the release tag
 # Output:
-#   r-pi/image/.pi-gen-evobridge/deploy/*-evobridge.img.xz
+#   r-pi/image/.pi-gen-evobridge/deploy/evobridge-<version>.img.xz
 #
 set -euo pipefail
 
@@ -27,6 +28,8 @@ PIGEN_BRANCH="${PIGEN_BRANCH:-arm64}"   # 64-bit: native on Apple Silicon + no 3
 REACTOR_REPO="https://github.com/Schwank-Lab/evoflow-reactor.git"
 REACTOR_REF="${REACTOR_REF:-master}"
 REACTOR_DIR="$IMAGE_DIR/.reactor"
+# Names the image file and is recorded in the image as /opt/evobridge/VERSION.
+IMAGE_VERSION="${IMAGE_VERSION:-$(date +%Y-%m-%d)}"
 
 echo "==> pi-gen checkout: $PIGEN_DIR ($PIGEN_BRANCH)"
 if [ ! -d "$PIGEN_DIR/.git" ]; then
@@ -48,9 +51,11 @@ rm -rf "$STAGE_FILES"; mkdir -p "$STAGE_FILES"
 rsync -a --exclude='__pycache__' --exclude='logs' "$REACTOR_DIR/pico-bridge" "$STAGE_FILES/"
 # Records which bridge code is on the card, for anyone looking on the Pi.
 echo "$REACTOR_COMMIT" > "$STAGE_FILES/pico-bridge/REACTOR_COMMIT"
+echo "$IMAGE_VERSION" > "$STAGE_FILES/VERSION"
 
 echo "==> installing config + custom stage into pi-gen"
 cp "$IMAGE_DIR/config-evobridge" "$PIGEN_DIR/config"
+echo "ARCHIVE_FILENAME=\"evobridge-$IMAGE_VERSION\"" >> "$PIGEN_DIR/config"
 rm -rf "$PIGEN_DIR/stage-evobridge"
 cp -r "$IMAGE_DIR/stage-evobridge" "$PIGEN_DIR/stage-evobridge"
 # Only the EvoBridge image is exported, not the intermediate Lite image.
@@ -70,5 +75,5 @@ fi
 
 echo
 echo "==> done. Flashable image:"
-ls -1 "$PIGEN_DIR/deploy/"*.img.xz
+ls -1 "$PIGEN_DIR/deploy/evobridge-$IMAGE_VERSION.img.xz"
 echo "Flash with Raspberry Pi Imager, or see r-pi/README.md for dd."

@@ -25,6 +25,6 @@ ENABLE_SSH=1
 # Build only up to Lite (stage2) plus our appliance stage — no desktop.
 STAGE_LIST="stage0 stage1 stage2 stage-evohub"
 
-# Deployers download evohub-<date>.img.xz; Raspberry Pi Imager flashes .xz directly.
+# Raspberry Pi Imager flashes .xz directly. build-image.sh names the file
+# evohub-<version>.img.xz.
 DEPLOY_COMPRESSION="xz"
-ARCHIVE_FILENAME="evohub-$(date +%Y-%m-%d)"
