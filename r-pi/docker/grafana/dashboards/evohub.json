@@ -490,11 +490,7 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "Bravo",
-          "value": "Bravo"
-        },
+        "current": {},
         "datasource": {
           "type": "grafana-postgresql-datasource",
           "uid": "bdp9peeaxe328b"
@@ -514,16 +510,12 @@
         "type": "query"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "2024.06.18_idec_TadA",
-          "value": "2024.06.18_idec_TadA"
-        },
+        "current": {},
         "datasource": {
           "type": "grafana-postgresql-datasource",
           "uid": "bdp9peeaxe328b"
         },
-        "definition": "select name from experiment where status = 'start'",
+        "definition": "select name from experiment where status = 'start' order by experiment_id desc",
         "description": "",
         "hide": 0,
         "includeAll": false,
@@ -531,7 +523,7 @@
         "multi": false,
         "name": "experiment_name",
         "options": [],
-        "query": "select name from experiment where status = 'start'",
+        "query": "select name from experiment where status = 'start' order by experiment_id desc",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

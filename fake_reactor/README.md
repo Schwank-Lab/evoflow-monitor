@@ -15,5 +15,4 @@ poetry run fake-reactor --hub evohub.local --count 20 --interval 2
 poetry run fake-reactor --help
 ```
 
-Then select the `fake-<date>-<time>` experiment in EvoMonitor. Each run creates a
-new experiment; reactor `FakeReactor` is created once and reused.
+Each run creates a new experiment, the newest one, which EvoMonitor opens on; reactor `FakeReactor` is created once and reused.

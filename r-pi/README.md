@@ -67,7 +67,9 @@ images (a few minutes); then the **`evo-net`** Wi-Fi appears.
 
 Join `evo-net` (password `hungryphage`) from a laptop and open:
 
-- **Grafana / EvoMonitor** — `http://192.168.4.1:3000` (login `admin` / `veryhungryphage`)
+- **Grafana / EvoMonitor** — `http://192.168.4.1:3000` (login `admin` / `veryhungryphage`).
+  It opens on the EvoMonitor dashboard, showing the most recently started
+  experiment; pick another from the *experiment_name* dropdown.
 - **UI** — `http://192.168.4.1:8282`
 
 Over ethernet, the hub is also at `http://evohub.local:3000` (or its IP from the
@@ -96,7 +98,7 @@ cd fake_reactor && poetry install
 poetry run fake-reactor                      # Ctrl+C to stop
 ```
 
-Then pick the `fake-…` experiment in EvoMonitor.
+It is the newest experiment, so EvoMonitor shows it straight away.
 
 ## Operating
 
