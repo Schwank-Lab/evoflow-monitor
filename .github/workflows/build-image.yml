@@ -1,15 +1,17 @@
 name: Build appliance images
 
-# Builds the flashable EvoHub and EvoBridge images (evohub-<date>.img.xz,
-# evobridge-<date>.img.xz; see r-pi/README.md).
-#   - pull request touching the images: builds both, kept as workflow artifacts
-#   - tag like `image-v1`: builds both and attaches them to a GitHub Release
+# Builds the flashable EvoHub and EvoBridge images (evohub-<version>.img.xz,
+# evobridge-<version>.img.xz; see r-pi/README.md).
+#   - pull request touching the images: builds both, kept as workflow artifacts,
+#     versioned dev-<commit>
+#   - version tag like `v1.0.0`: builds both, named after the tag, and attaches
+#     them to a GitHub Release
 #   - manual run from the Actions tab: builds both, kept as workflow artifacts
 
 on:
   workflow_dispatch:
   push:
-    tags: ['image-v*']
+    tags: ['v*']
   pull_request:
     paths:
       - 'r-pi/**'
@@ -22,6 +24,11 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+
+      - name: Image version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then v="$GITHUB_REF_NAME"; else v="dev-${GITHUB_SHA::7}"; fi
+          echo "IMAGE_VERSION=$v" >> "$GITHUB_ENV"
 
       # pi-gen keeps a root filesystem per stage, plus the preloaded container
       # images; the runner's preinstalled toolchains are not needed.
@@ -44,6 +51,11 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+
+      - name: Image version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then v="$GITHUB_REF_NAME"; else v="dev-${GITHUB_SHA::7}"; fi
+          echo "IMAGE_VERSION=$v" >> "$GITHUB_ENV"
 
       - name: Free disk space
         run: |

@@ -12,6 +12,8 @@
 install -d "${ROOTFS_DIR}/opt/evohub/mosquitto/config"
 install -m 0644 files/docker-compose.yml "${ROOTFS_DIR}/opt/evohub/docker-compose.yml"
 install -m 0644 files/evohub.env         "${ROOTFS_DIR}/opt/evohub/.env"
+# Which release this hub runs: cat /opt/evohub/VERSION
+install -m 0644 files/VERSION            "${ROOTFS_DIR}/opt/evohub/VERSION"
 
 # Grafana datasource + dashboards. The compose file mounts these into the
 # container, so EvoMonitor is there on first boot rather than an empty Grafana.
