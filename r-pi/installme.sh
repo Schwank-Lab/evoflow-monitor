@@ -71,16 +71,6 @@ EOF
 
 print_green "Docker installation complete!"
 
-print_green "Making sure SSH agent runs on startup..."
-# Define the snippet to add to .bashrc
-eval \`ssh-agent -s\` >& /dev/null
-ssh-add ~/.ssh/idec_github >& /dev/null 
-
-print_green "Adding SSH agent snippet to .bashrc..."
-# Append the snippet to .bashrc
-echo "$snippet" >> ~/.bashrc
-echo "Snippet added successfully."
-
 print_green "Installing Poetry ..."
 pipx install poetry
 

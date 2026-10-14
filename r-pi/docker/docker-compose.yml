@@ -1,0 +1,129 @@
+# EvoHub stack: database, MQTT broker, Grafana, the MQTT listener and the web UI.
+# Brought up on boot by evohub.service (systemd) -> `docker compose up -d`.
+# Values come from the sibling `.env` (public defaults; see evohub.env).
+#
+# All five images are preloaded into the SD image by build-image.sh, so the hub
+# starts without internet access. Versions are pinned so every hub built from
+# the same commit runs the same software.
+name: evohub
+
+services:
+  postgres:
+    image: postgres:16.15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [evohub]
+
+  # Creates the database tables on a fresh hub (tables that already exist are
+  # left alone), before the listener and UI start using them.
+  db-init:
+    image: evoflow_listener:latest
+    pull_policy: never
+    container_name: db_init
+    command: ["poetry", "run", "python", "-m", "evoflow_db.db_create_tables"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [evohub]
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    container_name: mosquitto
+    restart: always
+    # Separate volumes for config, data and logs. config is a bind mount so the
+    # mosquitto.conf written into the image is the one the broker uses.
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    ports:
+      - "1883:1883"
+    networks: [evohub]
+
+  grafana:
+    image: grafana/grafana:11.1.13
+    container_name: grafana
+    restart: always
+    environment:
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASS}
+      # Opening Grafana lands on the EvoMonitor dashboard instead of the welcome page.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/evohub.json
+      # Read by the provisioned datasource, which keeps the credentials out of
+      # the provisioning file itself.
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # Datasource and dashboards ship with the repo, so a fresh hub serves them
+      # on first boot instead of an empty Grafana.
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks: [evohub]
+
+  listener:
+    image: evoflow_listener:latest   # built by build-image.sh, not in any registry
+    pull_policy: never
+    container_name: mqtt_listener
+    restart: always
+    # The broker and database are reached over the compose network by service name.
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mosquitto:
+        condition: service_started
+    networks: [evohub]
+
+  ui:
+    image: evoflow_ui:latest         # built by build-image.sh, not in any registry
+    pull_policy: never
+    container_name: ui
+    restart: always
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    ports:
+      - "8282:8181"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mosquitto:
+        condition: service_started
+    networks: [evohub]
+
+volumes:
+  postgres_data:
+  mosquitto_data:
+  mosquitto_log:
+  grafana_data:
+
+networks:
+  evohub:
+    driver: bridge

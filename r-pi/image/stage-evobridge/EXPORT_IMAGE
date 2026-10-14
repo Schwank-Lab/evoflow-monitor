@@ -1,0 +1,2 @@
+# Presence of this file tells pi-gen to export a flashable image at this stage.
+IMG_SUFFIX=""

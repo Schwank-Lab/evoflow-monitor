@@ -1,14 +1,20 @@
 [tool.poetry]
 name = "fake-reactor"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Simulate an EvoFlow reactor to test an EvoHub without hardware"
 authors = ["graziano <myemail@mysite.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-paho-mqtt = "^2.0.0"
+python = "^3.12"
+paho-mqtt = "^2.1.0"
+psycopg2-binary = "^2.9.9"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+
+[tool.poetry.scripts]
+fake-reactor = "fake_reactor.main:main"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,0 +1,14 @@
+# Load the dashboards shipped in this repo, so a freshly flashed hub serves them
+# on first boot instead of an empty Grafana.
+#
+# allowUiUpdates keeps the browser usable as the editor: changes can still be
+# saved on the hub. The file stays the source of truth — export the dashboard
+# and commit it to keep an edit.
+apiVersion: 1
+
+providers:
+  - name: evohub
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

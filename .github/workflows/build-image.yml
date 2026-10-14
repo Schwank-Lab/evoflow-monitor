@@ -1,0 +1,81 @@
+name: Build appliance images
+
+# Builds the flashable EvoHub and EvoBridge images (evohub-<date>.img.xz,
+# evobridge-<date>.img.xz; see r-pi/README.md).
+#   - pull request touching the images: builds both, kept as workflow artifacts
+#   - tag like `image-v1`: builds both and attaches them to a GitHub Release
+#   - manual run from the Actions tab: builds both, kept as workflow artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['image-v*']
+  pull_request:
+    paths:
+      - 'r-pi/**'
+      - 'evohub/**'
+      - '.github/workflows/build-image.yml'
+
+jobs:
+  hub:
+    runs-on: ubuntu-24.04-arm      # native arm64, like the Raspberry Pi: no emulation
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      # pi-gen keeps a root filesystem per stage, plus the preloaded container
+      # images; the runner's preinstalled toolchains are not needed.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h /
+
+      - name: Build EvoHub image
+        run: cd r-pi && ./build-image.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evohub-image
+          path: r-pi/image/.pi-gen/deploy/*.img.xz
+          compression-level: 0       # already xz-compressed
+
+  bridge:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h /
+
+      - name: Build EvoBridge image
+        run: cd r-pi && ./build-bridge-image.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evobridge-image
+          path: r-pi/image/.pi-gen-evobridge/deploy/*.img.xz
+          compression-level: 0
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [hub, bridge]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write             # create the release / upload the assets
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: images
+          merge-multiple: true
+
+      - name: Checksums
+        run: cd images && sha256sum *.img.xz > SHA256SUMS
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            images/*.img.xz
+            images/SHA256SUMS

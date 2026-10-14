@@ -1,24 +1,14 @@
-FROM idec_base:latest
+FROM python:3.12-alpine
 
-# Set the working directory in the container
+# git lets poetry fetch evoflow_db and evoflow_utils, which are git dependencies
+# on this public repository.
+RUN apk add --no-cache git poetry
+
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock README.md ./
-
 COPY evoflow_listener ./evoflow_listener
 
-# Install dependencies
-RUN eval "$(ssh-agent -s)" && \
-    ssh-add /root/.ssh/idec_github && \
-    poetry install 
+RUN poetry install
 
-RUN tree
-
-# Run the Python script
 CMD ["poetry", "run", "listen"]
-
-
-
-
-
-

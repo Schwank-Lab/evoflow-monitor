@@ -1,0 +1,24 @@
+# pi-gen config for the EvoBridge appliance image.
+# Consumed by build-bridge-image.sh (which copies it into its pi-gen checkout).
+
+IMG_NAME="evobridge"
+RELEASE="trixie"   # matches the pi-gen arm64 branch default
+# First boot appends the Pi's serial number (evobridge-1a2b3c), so every bridge
+# gets a distinct hostname and MQTT client id.
+TARGET_HOSTNAME="evobridge"
+
+# Wi-Fi regulatory domain. Required: without it pi-gen leaves Wi-Fi switched off
+# and the bridge never joins evo-net. Override per bridge with COUNTRY in
+# evobridge.conf on the boot partition.
+WPA_COUNTRY="CH"
+
+FIRST_USER_NAME="evobridge"
+FIRST_USER_PASS="evobridge"
+DISABLE_FIRST_BOOT_USER_RENAME=1
+ENABLE_SSH=1
+
+# Build only up to Lite (stage2) plus our appliance stage — no desktop.
+STAGE_LIST="stage0 stage1 stage2 stage-evobridge"
+
+DEPLOY_COMPRESSION="xz"
+ARCHIVE_FILENAME="evobridge-$(date +%Y-%m-%d)"
