@@ -142,7 +142,7 @@ install -D -m 0644 /dev/stdin "${ROOTFS_DIR}/boot/firmware/evohub.conf.example" 
 # AP_SSID=evo-net
 # AP_PASSPHRASE=hungryphage
 
-# Wi-Fi uplink instead of ethernet (requires a USB Wi-Fi dongle):
+# Wi-Fi uplink instead of ethernet (requires a USB Wi-Fi dongle; untested):
 # UPLINK_WIFI_SSID=MyLabWifi
 # UPLINK_WIFI_PASS=secret
 EOF
