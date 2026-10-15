@@ -10,8 +10,8 @@ every EvoMonitor panel shows a live trace.
 
 ```bash
 poetry install
-poetry run fake-reactor                       # hub at 192.168.4.1 (from evo-net), until Ctrl+C
-poetry run fake-reactor --hub evohub.local --count 20 --interval 2
+poetry run fake-reactor                       # hub at evohub.local, until Ctrl+C
+poetry run fake-reactor --hub 10.65.12.34 --count 20 --interval 2
 poetry run fake-reactor --help
 ```
 

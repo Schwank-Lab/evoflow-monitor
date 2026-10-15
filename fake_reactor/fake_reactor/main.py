@@ -81,7 +81,7 @@ def state(experiment_id: int, od: float, total_dilution: float) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--hub", default="192.168.4.1", help="EvoHub address (default: its address on evo-net)")
+    parser.add_argument("--hub", default="evohub.local", help="EvoHub address (default: evohub.local)")
     parser.add_argument("--reactor", default="FakeReactor", help="reactor name (default: FakeReactor)")
     parser.add_argument("--experiment", default=f"fake-{time.strftime('%Y%m%d-%H%M%S')}", help="experiment name")
     parser.add_argument("--interval", type=float, default=5.0, help="seconds between states (default: 5)")

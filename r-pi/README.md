@@ -6,8 +6,7 @@ Two pre-built SD card images:
   runs Postgres, the Mosquitto MQTT broker, Grafana (EvoMonitor), the MQTT
   listener and the web UI, and creates its own Wi-Fi network, **`evo-net`**.
 - **EvoBridge** — one per reactor. Plugged into an EvoFlow reactor by USB, it
-  joins `evo-net` and forwards the reactor's state to the hub, and the hub's
-  commands back to the reactor.
+  joins `evo-net` and forwards the reactor's state to the hub.
 
 Flash, power on, done: no monitor, no keyboard, no internet needed. Both images
 come pre-paired — a bridge finds a hub with the default settings by itself.
@@ -53,7 +52,7 @@ The images work as-is. To change something, open the card's boot partition
 to its real name, then edit it:
 
 - hub: `evohub.conf.example` → `evohub.conf` — country, hostname, `evo-net` name
-  and password, or a Wi-Fi uplink (needs a USB Wi-Fi dongle).
+  and password, or a Wi-Fi uplink (needs a USB Wi-Fi dongle; untested).
 - bridge: `evobridge.conf.example` → `evobridge.conf` — country, the hub's Wi-Fi
   name and password (if you changed them on the hub), MQTT broker address.
 
@@ -62,19 +61,23 @@ public key on the boot partition as `authorized_keys`.
 
 ## 4. Start the hub
 
-Card in → power. Ethernet is optional: connected, the hub shares its internet
-with `evo-net` and keeps its clock correct. The first boot loads the container
-images (a few minutes); then the **`evo-net`** Wi-Fi appears.
+Connect the hub's ethernet port to the lab network, insert the card, power on.
+The first boot loads the container images (a few minutes); then the **`evo-net`**
+Wi-Fi appears for the bridges. The hub boots without ethernet too, but ethernet
+is how you reach it, and it keeps the hub's clock correct.
 
-Join `evo-net` (password `hungryphage`) from a laptop and open:
+From a computer on the lab network, open:
 
-- **Grafana / EvoMonitor** — `http://192.168.4.1:3000` (login `admin` / `veryhungryphage`).
+- **Grafana / EvoMonitor** — `http://evohub.local:3000` (login `admin` / `veryhungryphage`).
   It opens on the EvoMonitor dashboard, showing the most recently started
   experiment; pick another from the *experiment_name* dropdown.
-- **UI** — `http://192.168.4.1:8282`
+- **UI** — `http://evohub.local:8282`
 
-Over ethernet, the hub is also at `http://evohub.local:3000` (or its IP from the
-router's device list).
+`evohub.local` resolves only if your computer is on the same network segment as
+the hub. Otherwise use the hub's IP: look it up in the router's device list, or
+join `evo-net` (password `hungryphage`), `ssh evohub@192.168.4.1` and run
+`hostname -I`. The hub gets its address by DHCP, so ask IT to reserve a fixed
+address for it. On `evo-net` itself, the hub is always at `192.168.4.1`.
 
 ## 5. Connect the reactors
 
@@ -83,20 +86,20 @@ The bridge names itself `evobridge-<6 hex digits of its serial number>`, joins
 `evo-net` and starts forwarding. Data appears in EvoMonitor once an experiment is
 running.
 
-Evotool (on a laptop joined to `evo-net`) reaches the hub's database at
-`192.168.4.1` by default — needed for `evotool.py register` and
-`evotool.py experiment new`. From the lab network instead, set `DB_HOST` and
-`MQTT_HOST` to the hub's address.
+Evotool writes to the hub's database (`evotool.py register`, `experiment new`,
+`experiment start`). It looks for the hub at `evohub.local`; to use the hub's IP
+instead, set `EVOHUB_HOST` in Evotool's `.env` (see the
+[evoflow-reactor README](https://github.com/Schwank-Lab/evoflow-reactor)).
 
 ## 6. Test without a reactor
 
 [`fake_reactor`](../fake_reactor) registers a simulated reactor and experiment on
 the hub and streams turbidostat-like data, so you can check the whole hub before
-any hardware is ready. From a laptop on `evo-net`:
+any hardware is ready. From a computer on the lab network:
 
 ```bash
 cd fake_reactor && poetry install
-poetry run fake-reactor                      # Ctrl+C to stop
+poetry run fake-reactor                      # Ctrl+C to stop; --hub <hub-ip> if evohub.local doesn't resolve
 ```
 
 It is the newest experiment, so EvoMonitor shows it straight away.
@@ -104,13 +107,13 @@ It is the newest experiment, so EvoMonitor shows it straight away.
 ## Operating
 
 ```bash
-ssh evohub@192.168.4.1              # password: evohub (or evohub@evohub.local)
+ssh evohub@evohub.local             # password: evohub (or evohub@<hub-ip>; evohub@192.168.4.1 from evo-net)
 cd /opt/evohub
 cat VERSION                         # which release this hub runs
 docker compose ps                   # postgres, mosquitto, grafana, listener, ui Up; db-init Exited (0)
 docker compose logs -f listener     # follow a service's logs
 
-ssh evobridge@<bridge>.local        # password: evobridge
+ssh evobridge@<bridge>.local        # from evo-net; password: evobridge
 systemctl status evobridge          # journalctl -u evobridge -f for its log
 ```
 
@@ -119,10 +122,13 @@ systemctl status evobridge          # journalctl -u evobridge -f for its log
 - **No `evo-net` Wi-Fi** — wait a minute after power-on; check
   `nmcli connection show --active` on the hub (via ethernet).
 - **Services not up** — the first boot loads the images: `systemctl status evohub-load`.
+- **"No route to host" from a Mac** — macOS 15+ blocks apps from the local network
+  until allowed: System Settings → Privacy & Security → Local Network → enable
+  your browser and terminal, then restart them.
 - **Dashboard empty although data arrives** — EvoMonitor plots data by the hub's
   clock. A Pi has no battery-backed clock by default, so after a power cut
   without internet its time is wrong. Connect ethernet, fit a Raspberry Pi RTC
-  battery, or set the time: `ssh evohub@192.168.4.1 sudo date -s "<now>"`.
+  battery, or set the time: `ssh evohub@evohub.local sudo date -s "<now>"`.
 - **Bridge not forwarding** — `journalctl -u evobridge -f`; it retries every 10 s
   until the reactor is plugged in and the hub is reachable.
 
@@ -131,8 +137,8 @@ systemctl status evobridge          # journalctl -u evobridge -f for its log
 | Who talks | To what address |
 |---|---|
 | hub's own containers (listener/UI → Postgres/Mosquitto) | compose service names (`postgres`, `mosquitto`) |
-| bridges → MQTT broker, Evotool → database | `192.168.4.1` (the hub on `evo-net`) |
-| you → Grafana / UI | `192.168.4.1` on `evo-net`; `evohub.local` or the hub's IP on ethernet |
+| bridges → MQTT broker | `192.168.4.1` (the hub on `evo-net`) |
+| you → Grafana / UI, Evotool → database | `evohub.local` or the hub's IP on the lab network (Evotool: `EVOHUB_HOST`) |
 
 ---
 
